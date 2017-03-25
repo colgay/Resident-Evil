@@ -37,6 +37,14 @@ stock sendDamage(id, dmgSave, dmgTake, damageBits, Float:origin[3])
 	message_end();
 }
 
+stock Float:getEntSpeed(ent)
+{
+	new Float:vel[3];
+	entity_get_vector(ent, EV_VEC_velocity, vel);
+
+	return vector_length(vel);
+}
+
 stock sendScreenFade(id, Float:duration, Float:holdTime, flags, color[3], alpha, bool:external=false)
 {
 	static msgScreenFade;

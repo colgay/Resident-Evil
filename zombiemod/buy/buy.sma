@@ -9,7 +9,7 @@ new const SOUND_MEDKIT[][] = {"items/smallmedkit1.wav", "items/smallmedkit2.wav"
 new const BUY_ITEM_NAME[][] = 
 {
 	"Infection Bomb", "Antidote",
-	"Vaccine 100mL", "Vaccine 300mL", "Medical Kit",
+	"Vaccine 100mL", "Vaccine 300mL", "Medical Kit", "Antitoxin",
 	"Incendiary Grenade", "Nitrogen Grenade","Flare", "Night Vision",
 	"M3", "XM1014",
 	"MP5", "UMP45", "P90",
@@ -21,7 +21,7 @@ new const BUY_ITEM_NAME[][] =
 new const BUY_ITEM_DESC[][] = 
 {
 	"", "Human",
-	"+100AP", "+300AP", "+100HP", 
+	"+100AP", "+300AP", "+100HP", "脫毒", 
 	"BBQ", "硬膠", "黃豆", "I can't see shit",
 	"", "",
 	"", "", "",
@@ -33,7 +33,7 @@ new const BUY_ITEM_DESC[][] =
 new BUY_ITEM_TEAM[] = 
 {
 	BUY_TEAM_ZOMBIE, BUY_TEAM_ZOMBIE, // infection-bomb antidote
-	BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, // ap100 ap300 hp100
+	BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, // ap100 ap300 hp100, antitoxin
 	BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, // fire ice flare nvg
 	BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, // m3 xm1014
 	BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, // mp5 ump45 p90
@@ -45,7 +45,7 @@ new BUY_ITEM_TEAM[] =
 new const BUY_ITEM_COST[][2] = 
 {
 	{20, 0}, {35, 0}, // infection-bomb antidote
-	{3, 1}, {5, 1}, {6, 2}, // ap100 ap300 hp100
+	{3, 1}, {5, 1}, {6, 2}, {8, 3}, // ap100 ap300 hp100 antitoxin
 	{6, 5}, {5, 4}, {3, 3}, {10, 5}, // fire ice flare nvg
 	{8, 3}, {13, 4}, // m3 xm1014
 	{8, 3}, {7, 2}, {10, 3}, // mp5 ump45 p90
@@ -61,6 +61,7 @@ enum
 	BUYITEM_VACCINE1,
 	BUYITEM_VACCINE2,
 	BUYITEM_MEDKIT,
+	BUYITEM_ANTITOXIN,
 	BUYITEM_FIRE,
 	BUYITEM_ICE,
 	BUYITEM_FLARE,
@@ -208,7 +209,18 @@ Buy::BuyItem_Post(id, item)
 			pev(id, pev_armorvalue, armor);
 			maxArmor = getMaxArmor(id);
 			
-			set_pev(id, pev_armorvalue, floatmin(armor + 300.0, maxArmor));
+			if (getPoisonType(id) == POISON_T_VIRUS || getPoisonType(id) == POISON_G_VIRUS)
+			{
+				if (getPoisonLevel(id) - 0.2 <= 0.0)
+					resetPoisoning(id);
+				else
+				{
+					client_print(id, print_center, "你中毒太深, 請再買一次疫苗");
+					setPoisonLevel(id, getPoisonLevel(id) - 0.2);
+				}
+			}
+			
+			set_pev(id, pev_armorvalue, floatmin(armor + 100.0, maxArmor));
 			emit_sound(id, CHAN_ITEM, SOUND_MEDKIT[random(sizeof SOUND_MEDKIT)], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 		}
 		case BUYITEM_VACCINE2:
@@ -216,7 +228,18 @@ Buy::BuyItem_Post(id, item)
 			new Float:armor, Float:maxArmor;
 			pev(id, pev_armorvalue, armor);
 			maxArmor = getMaxArmor(id);
-			
+
+			if (getPoisonType(id) == POISON_T_VIRUS || getPoisonType(id) == POISON_G_VIRUS)
+			{
+				if (getPoisonLevel(id) - 0.5 <= 0.0)
+					resetPoisoning(id);
+				else
+				{
+					client_print(id, print_center, "你中毒太深, 請再買一次疫苗");
+					setPoisonLevel(id, getPoisonLevel(id) - 0.5);
+				}
+			}
+
 			set_pev(id, pev_armorvalue, floatmin(armor + 300.0, maxArmor));
 			emit_sound(id, CHAN_ITEM, SOUND_MEDKIT[random(sizeof SOUND_MEDKIT)], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 		}
@@ -226,7 +249,24 @@ Buy::BuyItem_Post(id, item)
 			pev(id, pev_health, health);
 			pev(id, pev_max_health, maxHealth);
 			
-			set_pev(id, pev_health, floatmin(health + 120.0, maxHealth));
+			set_pev(id, pev_health, floatmin(health + 100.0, maxHealth));
+			emit_sound(id, CHAN_ITEM, SOUND_MEDKIT[random(sizeof SOUND_MEDKIT)], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+		}
+		case BUYITEM_ANTITOXIN:
+		{
+			new Float:armor, Float:maxArmor;
+			pev(id, pev_armorvalue, armor);
+			maxArmor = getMaxArmor(id);
+
+			new Float:health, Float:maxHealth;
+			pev(id, pev_health, health);
+			pev(id, pev_max_health, maxHealth);
+			
+			resetPoisoning(id);
+
+			set_pev(id, pev_health, floatmin(health + 50.0, maxHealth));
+			set_pev(id, pev_armorvalue, floatmin(armor + 100.0, maxArmor));
+			
 			emit_sound(id, CHAN_ITEM, SOUND_MEDKIT[random(sizeof SOUND_MEDKIT)], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 		}
 		case BUYITEM_FIRE:

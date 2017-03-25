@@ -1,3 +1,9 @@
+new const PRIMARY_NAMES[][] = {"MAC-10", "TMP", "Scout"};
+new const PRIMARY_CLASSES[][] = {"mac10", "tmp", "scout"};
+
+new const PISTOL_NAMES[][] = {"Glock 18", "USP", "P228", "Dual Elite", "Five-Seven"};
+new const PISTOL_CLASSES[][] = {"glock18", "usp", "p228", "elite", "fiveseven"};
+
 const Float:ARMOR_RATIO = 0.0;
 const Float:ARMOR_BONUS = 1.0;
 
@@ -19,6 +25,8 @@ Human::Humanize_Post(id)
 	
 	setResourcePoint(id, 1000);
 	setPlayerPoint(id, 1000);
+	
+	ShowPrimaryMenu(id);
 }
 
 public Human::TakeDamage(id, inflictor, attacker, Float:damage, damageBits)
@@ -68,6 +76,76 @@ public Human::TakeDamage(id, inflictor, attacker, Float:damage, damageBits)
 			SetHamParamFloat(4, damage);
 		}
 	}
+}
+
+public ShowPrimaryMenu(id)
+{
+	new menu = menu_create("Choose a Weapon", "HandlePrimaryMenu");
+	
+	for (new i = 0; i < sizeof PRIMARY_NAMES; i++)
+	{
+		menu_additem(menu, PRIMARY_NAMES[i]);
+	}
+	
+	menu_setprop(menu, MPROP_NUMBER_COLOR, "\y");
+	menu_setprop(menu, MPROP_EXITNAME, "#bye#^n");
+	menu_display(id, menu, _, 10);
+}
+
+public HandlePrimaryMenu(id, menu, item)
+{
+	menu_destroy(menu);
+	
+	if (item == MENU_EXIT)
+		return;
+	
+	if (!is_user_alive(id) || isZombie(id))
+		return;
+	
+	dropWeapons(id, 1);
+	
+	new name[32] = "weapon_"
+	add(name, charsmax(name), PRIMARY_CLASSES[item]);	
+	give_item(id, name);
+	
+	new weapon = get_weaponid(name);
+	giveWeaponFullAmmo(id, weapon);
+	
+	ShowPistolMenu(id);
+}
+
+public ShowPistolMenu(id)
+{
+	new menu = menu_create("Choose a Pistol", "HandlePistolMenu");
+	
+	for (new i = 0; i < sizeof PISTOL_NAMES; i++)
+	{
+		menu_additem(menu, PISTOL_NAMES[i]);
+	}
+	
+	menu_setprop(menu, MPROP_NUMBER_COLOR, "\y");
+	menu_setprop(menu, MPROP_EXITNAME, "#bye#^n");
+	menu_display(id, menu, _, 10);
+}
+
+public HandlePistolMenu(id, menu, item)
+{
+	menu_destroy(menu);
+	
+	if (item == MENU_EXIT)
+		return;
+	
+	if (!is_user_alive(id) || isZombie(id))
+		return;
+	
+	dropWeapons(id, 2);
+	
+	new name[32] = "weapon_"
+	add(name, charsmax(name), PISTOL_CLASSES[item]);	
+	give_item(id, name);
+	
+	new weapon = get_weaponid(name);
+	giveWeaponFullAmmo(id, weapon);
 }
 
 stock humanizePlayer(id)

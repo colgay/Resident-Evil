@@ -11,6 +11,9 @@ public OnPluginPrecache()
 	LightZombie::Precache();
 	HeavyZombie::Precache();
 	GameRules::Precache();
+	FireBomb::Precache();
+	IceBomb::Precache();
+	Flare::Precache();
 	Buy::Precache();
 	Misc::Precache();
 }
@@ -23,6 +26,7 @@ public OnPluginInit()
 	
 	register_forward(FM_PlayerPreThink, "OnPlayerPreThink");
 	register_forward(FM_CmdStart, "OnCmdStart");
+	register_forward(FM_SetModel, "OnSetModel");
 	
 	unregister_forward(FM_Spawn, g_fwEntSpawn);
 	
@@ -30,6 +34,8 @@ public OnPluginInit()
 	RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn_Post", 1);
 	RegisterHam(Ham_Killed, "player", "OnPlayerKilled");
 	RegisterHam(Ham_Killed, "player", "OnPlayerKilled_Post", 1);
+	RegisterHam(Ham_Player_Jump, "player", "OnPlayerJump");
+	RegisterHam(Ham_Player_Duck, "player", "OnPlayerDuck");
 
 	RegisterHam(Ham_CS_Player_ResetMaxSpeed, "player", "OnPlayerResetMaxSpeed_Post", 1);
 
@@ -38,6 +44,8 @@ public OnPluginInit()
 	RegisterHam(Ham_Touch, "weaponbox", "OnWeaponTouch");
 	RegisterHam(Ham_Touch, "weapon_shield", "OnWeaponTouch");
 	RegisterHam(Ham_Touch, "armoury_entity", "OnWeaponTouch");
+	
+	RegisterHam(Ham_Think, "grenade", "OnGrenadeThink");
 	
 	g_maxClients = get_maxplayers();
 	
@@ -84,6 +92,8 @@ public OnClientDisconnect(id)
 {
 	Player::Disconnect(id);
 	Zombie::Disconnect(id);
+	FireBomb::Disconnect(id);
+	IceBomb::Disconnect(id);
 }
 
 public OnClientPutInServer(id)
@@ -109,12 +119,24 @@ public OnPlayerSpawn_Post(id)
 public OnPlayerKilled(id, attacker, shouldGib)
 {
 	Zombie::Killed(id);
+	FireBomb::Killed(id);
+	IceBomb::Killed(id);
 }
 
 public OnPlayerKilled_Post(id, attacker, shouldGib)
 {
 	GameRules::PlayerKilled_Post(id);
 	Zombie::Killed_Post(id);
+}
+
+public OnPlayerJump(id)
+{
+	IceBomb::PlayerJump(id);
+}
+
+public OnPlayerDuck(id)
+{
+	IceBomb::PlayerDuck(id);
 }
 
 public OnPlayerResetMaxSpeed_Post(id)
@@ -127,6 +149,7 @@ public OnPlayerResetMaxSpeed_Post(id)
 	FastZombie::ResetMaxSpeed_Post(id);
 	LightZombie::ResetMaxSpeed_Post(id);
 	HeavyZombie::ResetMaxSpeed_Post(id);
+	IceBomb::ResetMaxSpeed_Post(id);
 }
 
 public OnKnifeDeploy_Post(ent)
@@ -153,6 +176,19 @@ public OnWeaponTouch(weapon, toucher)
 	return HOOK_RESULT;
 }
 
+public OnGrenadeThink(ent)
+{
+	if (!pev_valid(ent))
+		return HAM_IGNORED;
+	
+	HOOK_RESULT = HAM_IGNORED;
+	
+	FireBomb::GrenadeThink(ent);
+	IceBomb::GrenadeThink(ent);
+	Flare::GrenadeThink(ent);
+	return HOOK_RESULT;
+}
+
 public OnCmdStart(id, uc)
 {
 	Nemesis::CmdStart(id, uc);
@@ -163,6 +199,17 @@ public OnPlayerPreThink(id)
 	Zombie::PlayerPreThink(id);
 	Nemesis::PlayerPreThink(id);
 	Gmonster::PlayerPreThink(id);
+	FireBomb::PlayerPreThink(id);
+}
+
+public OnSetModel(ent, const model[])
+{
+	if (!pev_valid(ent))
+		return;
+	
+	FireBomb::SetModel(ent, model);
+	IceBomb::SetModel(ent, model);
+	Flare::SetModel(ent, model);
 }
 
 public OnPlayerInfect(id, attacker)
@@ -189,6 +236,8 @@ public OnPlayerHumanize_Post(id)
 	Human::Humanize_Post(id);
 	Zombie::Humanize_Post(id);
 	GameRules::Humanize_Post(id);
+	FireBomb::Humanize_Post(id);
+	IceBomb::Humanize_Post(id);
 }
 
 public OnHumanArmorDamage(id, attacker, Float:damage, &Float:armorRatio, &Float:armorBouns)

@@ -7,6 +7,9 @@
 #define LightZombie::%0(%1) 	LightZombie@%0(%1)
 #define HeavyZombie::%0(%1) 	HeavyZombie@%0(%1)
 #define GameRules::%0(%1) 		GameRules@%0(%1)
+#define FireBomb::%0(%1) 		FireBomb@%0(%1)
+#define IceBomb::%0(%1) 		IceBomb@%0(%1)
+#define Flare::%0(%1) 			Flare@%0(%1)
 #define Buy::%0(%1) 			Buy@%0(%1)
 #define Misc::%0(%1) 			Misc@%0(%1)
 
@@ -20,6 +23,8 @@
 
 #define ZCLASS_SPECIAL -1
 #define ZCLASS_BOSS -2
+
+#define PEV_NADE_TYPE pev_flTimeStepSound
 
 enum
 {
@@ -60,6 +65,7 @@ enum(+=50)
 {
 	TASK_ROUNDSTART = 0,
 	TASK_RESPAWN,
+	TASK_FROZEN,
 };
 
 enum

@@ -164,7 +164,7 @@ public Zombie::TakeDamage(id, inflictor, attacker, Float:damage, damageBits)
 		new Float:health;
 		pev(id, pev_health, health);
 		
-		if (damage > health)
+		if (damage >= health)
 		{
 			if (OnHumanInfection(id, attacker, damage) != PLUGIN_HANDLED)
 			{
@@ -265,6 +265,21 @@ stock resetPoisoning(id)
 	
 	if (is_user_alive(id))
 		set_user_rendering(id);
+}
+
+stock Float:getPoisonLevel(id)
+{
+	return g_poisonLevel[id];
+}
+
+stock setPoisonLevel(id, Float:value)
+{
+	g_poisonLevel[id] = value;
+}
+
+stock getPoisonType(id)
+{
+	return g_poisonType[id];
 }
 
 stock infectPlayer(id, attacker=0, bool:score=false)

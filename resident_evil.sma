@@ -30,7 +30,11 @@
 
 #include "zombiemod/gamerules.sma"
 
-#include "zombiemod/buy.sma"
+#include "zombiemod/grenade/firebomb.sma"
+#include "zombiemod/grenade/icebomb.sma"
+#include "zombiemod/grenade/flare.sma"
+
+#include "zombiemod/buy/buy.sma"
 
 #include "zombiemod/ammo.sma"
 #include "zombiemod/misc.sma"
