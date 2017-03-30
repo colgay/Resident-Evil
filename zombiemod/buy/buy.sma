@@ -1,8 +1,14 @@
 enum(<<= 1)
 {
 	BUY_TEAM_HUMAN = 1,
+	BUY_TEAM_LEADER,
 	BUY_TEAM_ZOMBIE,
+	BUY_TEAM_NEMESIS,
+	BUY_TEAM_GMONSTER
 };
+
+const BUY_TEAM_HUMANS = BUY_TEAM_HUMAN | BUY_TEAM_LEADER;
+const BUY_TEAM_ZOMBIES = BUY_TEAM_ZOMBIE | BUY_TEAM_NEMESIS | BUY_TEAM_GMONSTER;
 
 new const SOUND_MEDKIT[][] = {"items/smallmedkit1.wav", "items/smallmedkit2.wav"};
 
@@ -10,11 +16,11 @@ new const BUY_ITEM_NAME[][] =
 {
 	"Infection Bomb", "Antidote",
 	"Vaccine 100mL", "Vaccine 300mL", "Medical Kit", "Antitoxin",
-	"Incendiary Grenade", "Nitrogen Grenade","Flare", "Night Vision",
+	"Incendiary Grenade", "Nitrogen Grenade", "Liquid Nitrogen", "Flare", "Night Vision",
 	"M3", "XM1014",
 	"MP5", "UMP45", "P90",
 	"Galil", "Famas", "M4A1", "SG552", "AUG",
-	"G3SG1", "SG550", "Scout", "AWP",
+	"G3SG1", "SG550", "AWP",
 	"M249"
 };
 
@@ -22,35 +28,35 @@ new const BUY_ITEM_DESC[][] =
 {
 	"", "Human",
 	"+100AP", "+300AP", "+100HP", "脫毒", 
-	"BBQ", "硬膠", "黃豆", "I can't see shit",
+	"BBQ", "硬膠", "強化硬膠", "黃豆", "I can't see shit",
 	"", "",
 	"", "", "",
 	"", "", "", "", "",
-	"", "", "", "",
+	"", "", "",
 	""
 };
 
 new BUY_ITEM_TEAM[] = 
 {
 	BUY_TEAM_ZOMBIE, BUY_TEAM_ZOMBIE, // infection-bomb antidote
-	BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, // ap100 ap300 hp100, antitoxin
-	BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, // fire ice flare nvg
-	BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, // m3 xm1014
-	BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, // mp5 ump45 p90
-	BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, // galil famas m4a1 sg552 aug
-	BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, BUY_TEAM_HUMAN, // g3sg1 sg550 scout awp
-	BUY_TEAM_HUMAN // m249
+	BUY_TEAM_HUMANS, BUY_TEAM_HUMANS, BUY_TEAM_HUMANS, BUY_TEAM_HUMANS, // ap100 ap300 hp100, antitoxin
+	BUY_TEAM_HUMANS, BUY_TEAM_HUMAN, BUY_TEAM_LEADER, BUY_TEAM_HUMANS, BUY_TEAM_HUMANS, // fire ice superice flare nvg
+	BUY_TEAM_HUMANS, BUY_TEAM_HUMANS, // m3 xm1014
+	BUY_TEAM_HUMANS, BUY_TEAM_HUMANS, BUY_TEAM_HUMANS, // mp5 ump45 p90
+	BUY_TEAM_HUMANS, BUY_TEAM_HUMANS, BUY_TEAM_HUMANS, BUY_TEAM_HUMANS, BUY_TEAM_HUMANS, // galil famas m4a1 sg552 aug
+	BUY_TEAM_HUMANS, BUY_TEAM_HUMANS, BUY_TEAM_HUMANS, // g3sg1 sg550 awp
+	BUY_TEAM_HUMANS // m249
 };
 
 new const BUY_ITEM_COST[][2] = 
 {
 	{20, 0}, {35, 0}, // infection-bomb antidote
 	{3, 1}, {5, 1}, {6, 2}, {8, 3}, // ap100 ap300 hp100 antitoxin
-	{6, 5}, {5, 4}, {3, 3}, {10, 5}, // fire ice flare nvg
+	{6, 5}, {5, 4}, {10, 6}, {3, 3}, {10, 5}, // fire ice superice flare nvg
 	{8, 3}, {13, 4}, // m3 xm1014
 	{8, 3}, {7, 2}, {10, 3}, // mp5 ump45 p90
 	{9, 3}, {8, 3}, {10, 4}, {11, 4}, {11, 4}, // galil famas m4a1 sg552 aug
-	{40, 8}, {45, 7}, {7, 3}, {12, 4}, // g3sg1 sg550 scout awp
+	{40, 8}, {45, 7}, {12, 4}, // g3sg1 sg550 scout awp
 	{20, 4} // m249
 };
 
@@ -64,10 +70,11 @@ enum
 	BUYITEM_ANTITOXIN,
 	BUYITEM_FIRE,
 	BUYITEM_ICE,
+	BUYITEM_SUPERICE,
 	BUYITEM_FLARE,
 	BUYITEM_NVG,
 	BUYITEM_FIRSTWPN,
-	BUYITEM_LASTWPN = BUYITEM_FIRSTWPN + 15,
+	BUYITEM_LASTWPN = BUYITEM_FIRSTWPN + 14,
 };
 
 new Array:g_buyItemName;
@@ -167,6 +174,18 @@ Buy::BuyItem(id, item)
 			}
 		}
 		case BUYITEM_ICE:
+		{
+			if (user_has_weapon(id, CSW_FLASHBANG))
+			{
+				new ammoId = getWeaponAmmoType(CSW_FLASHBANG);
+				if (cs_get_user_bpammo(id, CSW_FLASHBANG) >= getAmmoMax(ammoId))
+				{
+					client_print(id, print_center, "#Cstrike_TitlesTXT_Cannot_Carry_Anymore");
+					HOOK_RETURN(PLUGIN_HANDLED);
+				}
+			}
+		}
+		case BUYITEM_SUPERICE:
 		{
 			if (user_has_weapon(id, CSW_FLASHBANG))
 			{
@@ -293,6 +312,18 @@ Buy::BuyItem_Post(id, item)
 				give_item(id, "weapon_flashbang");
 			}
 		}
+		case BUYITEM_SUPERICE:
+		{
+			if (user_has_weapon(id, CSW_FLASHBANG))
+			{
+				giveWeaponAmmo(id, CSW_FLASHBANG);
+				emit_sound(id, CHAN_ITEM, "items/9mmclip1.wav", VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+			}
+			else
+			{
+				give_item(id, "weapon_flashbang");
+			}
+		}
 		case BUYITEM_FLARE:
 		{
 			if (user_has_weapon(id, CSW_SMOKEGRENADE))
@@ -312,7 +343,7 @@ Buy::BuyItem_Post(id, item)
 				"m3", "xm1014",
 				"mp5navy", "ump45", "p90",
 				"galil", "famas", "m4a1", "sg552", "aug",
-				"g3sg1", "sg550", "scout", "awp",
+				"g3sg1", "sg550", "awp",
 				"m249"
 			};
 			
@@ -366,8 +397,11 @@ public ShowBuyMenu(id)
 	{
 		team = ArrayGetCell(g_buyItemTeam, i);
 		
-		if ((isZombie(id) && !(team & BUY_TEAM_ZOMBIE))
-		|| (!isZombie(id) && !(team & BUY_TEAM_HUMAN)))
+		if ((getNemesis(id) && !(team & BUY_TEAM_NEMESIS))
+		|| (getGmonster(id) && !(team & BUY_TEAM_GMONSTER))
+		|| (isZombie(id) && !getNemesis(id) && !getGmonster(id) && !(team & BUY_TEAM_ZOMBIE))
+		|| (getLeader(id) && !(team & BUY_TEAM_LEADER))
+		|| (!isZombie(id) && !getLeader(id) && !(team & BUY_TEAM_HUMAN)))
 			continue;
 		
 		formatex(text, charsmax(text), "%a", ArrayGetStringHandle(g_buyItemName, i));
@@ -404,8 +438,11 @@ public HandleBuyMenu(id, menu, item)
 	new item2 = str_to_num(info);
 	
 	new team = ArrayGetCell(g_buyItemTeam, item2);
-	if ((isZombie(id) && (~team & BUY_TEAM_ZOMBIE))
-	|| (!isZombie(id) && (~team & BUY_TEAM_HUMAN)))
+	if ((getNemesis(id) && !(team & BUY_TEAM_NEMESIS))
+	|| (getGmonster(id) && !(team & BUY_TEAM_GMONSTER))
+	|| (isZombie(id) && !getNemesis(id) && !getGmonster(id) && !(team & BUY_TEAM_ZOMBIE))
+	|| (getLeader(id) && !(team & BUY_TEAM_LEADER))
+	|| (!isZombie(id) && !getLeader(id) && !(team & BUY_TEAM_HUMAN)))
 		return;
 	
 	new price = ArrayGetCell(g_buyItemCost, item2);

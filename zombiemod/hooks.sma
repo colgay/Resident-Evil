@@ -4,6 +4,7 @@ public OnPluginPrecache()
 {
 	g_fwEntSpawn = register_forward(FM_Spawn, "OnEntSpawn");
 	
+	Leader::Precache();
 	Zombie::Precache();
 	Nemesis::Precache();
 	Gmonster::Precache();
@@ -13,6 +14,7 @@ public OnPluginPrecache()
 	GameRules::Precache();
 	FireBomb::Precache();
 	IceBomb::Precache();
+	VirusBomb::Precache();
 	Flare::Precache();
 	Buy::Precache();
 	Misc::Precache();
@@ -21,7 +23,8 @@ public OnPluginPrecache()
 public OnPluginInit()
 {
 	register_event("HLTV", "OnEventNewRound", "a", "1=0", "2=0");
-	
+	register_event("DeathMsg", "OnEventDeathMsg", "a");
+
 	register_logevent("OnEventRoundStart", 2, "1=Round_Start");
 	
 	register_forward(FM_PlayerPreThink, "OnPlayerPreThink");
@@ -51,6 +54,7 @@ public OnPluginInit()
 	
 	Player::Init();
 	Human::Init();
+	Leader::Init();
 	Zombie::Init();
 	Nemesis::Init();
 	Gmonster::Init();
@@ -58,7 +62,9 @@ public OnPluginInit()
 	LightZombie::Init();
 	HeavyZombie::Init();
 	GameRules::Init();
+	VirusBomb::Init();
 	Buy::Init();
+	HudInfo::Init();
 }
 
 public OnPluginNatives()
@@ -81,6 +87,7 @@ public OnEventNewRound()
 {
 	Nemesis::NewRound();
 	GameRules::NewRound();
+	Player::NewRound();
 }
 
 public OnEventRoundStart()
@@ -88,9 +95,22 @@ public OnEventRoundStart()
 	GameRules::RoundStart();
 }
 
+public OnEventDeathMsg()
+{
+	new killer = read_data(1);
+	new victim = read_data(2);
+	/*new bool:isHeadshot = bool:read_data(3);
+	
+	new weaponName[32];
+	read_data(4, weaponName, charsmax(weaponName));*/
+	
+	Player::DeathMsg(killer, victim);
+}
+
 public OnClientDisconnect(id)
 {
 	Player::Disconnect(id);
+	Leader::Disconnect(id);
 	Zombie::Disconnect(id);
 	FireBomb::Disconnect(id);
 	IceBomb::Disconnect(id);
@@ -126,6 +146,8 @@ public OnPlayerKilled(id, attacker, shouldGib)
 public OnPlayerKilled_Post(id, attacker, shouldGib)
 {
 	GameRules::PlayerKilled_Post(id);
+	//Player::Killed_Post(id, attacker);
+	Leader::Killed_Post(id);
 	Zombie::Killed_Post(id);
 }
 
@@ -144,6 +166,7 @@ public OnPlayerResetMaxSpeed_Post(id)
 	if (!pev_valid(id) || !is_user_alive(id))
 		return;
 	
+	Leader::ResetMaxSpeed(id);
 	Nemesis::ResetMaxSpeed_Post(id);
 	Gmonster::ResetMaxSpeed_Post(id);
 	FastZombie::ResetMaxSpeed_Post(id);
@@ -172,6 +195,7 @@ public OnWeaponTouch(weapon, toucher)
 	
 	HOOK_RESULT = HAM_IGNORED;
 	Zombie::TouchWeapon(toucher);
+	Leader::WeaponTouch(weapon, toucher);
 	
 	return HOOK_RESULT;
 }
@@ -186,6 +210,7 @@ public OnGrenadeThink(ent)
 	FireBomb::GrenadeThink(ent);
 	IceBomb::GrenadeThink(ent);
 	Flare::GrenadeThink(ent);
+	VirusBomb::GrenadeThink(ent);
 	return HOOK_RESULT;
 }
 
@@ -210,6 +235,7 @@ public OnSetModel(ent, const model[])
 	FireBomb::SetModel(ent, model);
 	IceBomb::SetModel(ent, model);
 	Flare::SetModel(ent, model);
+	VirusBomb::SetModel(ent, model);
 }
 
 public OnPlayerInfect(id, attacker)
@@ -218,6 +244,7 @@ public OnPlayerInfect(id, attacker)
 
 public OnPlayerInfect_Post(id, attacker)
 {
+	Leader::Infect_Post(id);
 	Zombie::Infect_Post(id);
 	Nemesis::Infect_Post(id);
 	Gmonster::Infect_Post(id);
@@ -234,15 +261,17 @@ public OnPlayerHumanize(id)
 public OnPlayerHumanize_Post(id)
 {
 	Human::Humanize_Post(id);
+	Leader::Humanize_Post(id);
 	Zombie::Humanize_Post(id);
 	GameRules::Humanize_Post(id);
 	FireBomb::Humanize_Post(id);
 	IceBomb::Humanize_Post(id);
 }
 
-public OnHumanArmorDamage(id, attacker, Float:damage, &Float:armorRatio, &Float:armorBouns)
+public OnHumanArmorDamage(id, attacker, Float:damage, &Float:armorRatio, &Float:armorBonus)
 {
-	Nemesis::HumanArmorDamage(attacker, armorRatio, armorBouns);
+	Nemesis::HumanArmorDamage(attacker, armorRatio, armorBonus);
+	Gmonster::HumanArmorDamage(attacker, armorRatio, armorBonus);
 }
 
 public OnHumanInfection(id, attacker, Float:damage)
@@ -270,6 +299,11 @@ public OnSetZombieKnifeModel(id)
 	FastZombie::SetKnifeModel(id);
 	LightZombie::SetKnifeModel(id);
 	HeavyZombie::SetKnifeModel(id);
+}
+
+public OnResetHuman(id)
+{
+	Leader::ResetHuman(id);
 }
 
 public OnResetZombie(id)

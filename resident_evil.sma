@@ -20,6 +20,7 @@
 #include "zombiemod/player.sma"
 
 #include "zombiemod/human/human.sma"
+#include "zombiemod/human/leader.sma"
 
 #include "zombiemod/zombie/zombie.sma"
 #include "zombiemod/zombie/nemesis.sma"
@@ -33,8 +34,11 @@
 #include "zombiemod/grenade/firebomb.sma"
 #include "zombiemod/grenade/icebomb.sma"
 #include "zombiemod/grenade/flare.sma"
+#include "zombiemod/grenade/virusbomb.sma"
 
 #include "zombiemod/buy/buy.sma"
+
+#include "zombiemod/hudinfo.sma"
 
 #include "zombiemod/ammo.sma"
 #include "zombiemod/misc.sma"

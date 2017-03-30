@@ -1,4 +1,4 @@
-const NADE_FLARE = 2653;
+const NADE_FLARE = 3425;
 
 Flare::Precache()
 {
@@ -7,9 +7,6 @@ Flare::Precache()
 
 Flare::SetModel(ent, const model[])
 {
-	if (!pev_valid(ent))
-		return;
-	
 	if (equal(model[7], "w_smokegrenade.mdl"))
 	{
 		new Float:dmgTime;
@@ -42,6 +39,9 @@ Flare::SetModel(ent, const model[])
 
 Flare::GrenadeThink(ent)
 {
+	if (!pev_valid(ent))
+		HOOK_RETURN(HAM_IGNORED);
+	
 	if (pev(ent, PEV_NADE_TYPE) == NADE_FLARE)
 	{
 		new Float:currentTime = get_gametime();
@@ -55,7 +55,7 @@ Flare::GrenadeThink(ent)
 		if (pev(ent, pev_bInDuck) == 1)
 		{
 			new Float:startTime;
-			pev(ent, pev_starttime, startTime);
+			pev(ent, pev_fuser1, startTime);
 			
 			if (currentTime >= startTime + 60.0)
 			{
@@ -93,7 +93,11 @@ Flare::GrenadeThink(ent)
 			emit_sound(ent, CHAN_WEAPON, "items/nvg_on.wav", 1.0, ATTN_NORM, 0, PITCH_NORM);
 			
 			set_pev(ent, pev_bInDuck, 1);
-			set_pev(ent, pev_starttime, currentTime);
+			set_pev(ent, pev_fuser1, currentTime);
+			set_pev(ent, pev_dmgtime, currentTime + 0.1);
+		}
+		else
+		{
 			set_pev(ent, pev_dmgtime, currentTime + 0.1);
 		}
 	}

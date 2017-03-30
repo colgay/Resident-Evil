@@ -1,9 +1,10 @@
 const NADE_ICEBOMB = 8234;
+const NADE_ICEBOMB2 = 7927;
 
 const Float:ICEBOMB_RADIUS = 240.0;
 
-const Float:ICEBOMB_DURATION_MIN = 2.5;
-const Float:ICEBOMB_DURATION_MAX = 4.0;
+new const Float:ICEBOMB_DURATION_MIN[] = {2.5, 4.0};
+new const Float:ICEBOMB_DURATION_MAX[] = {4.0, 6.0};
 
 new bool:g_isFrozen[33];
 new Float:g_frozenStart[33];
@@ -15,9 +16,6 @@ IceBomb::Precache()
 
 IceBomb::SetModel(ent, const model[])
 {
-	if (!pev_valid(ent))
-		return;
-	
 	if (equal(model[7], "w_flashbang.mdl"))
 	{
 		new Float:dmgTime;
@@ -30,27 +28,51 @@ IceBomb::SetModel(ent, const model[])
 		if (isZombie(owner))
 			return;
 		
-		message_begin(MSG_BROADCAST, SVC_TEMPENTITY);
-		write_byte(TE_BEAMFOLLOW);
-		write_short(ent); // entity
-		write_short(g_sprTrail) // sprite
-		write_byte(10) // life
-		write_byte(10) // width
-		write_byte(0) // r
-		write_byte(75) // g
-		write_byte(150) // b
-		write_byte(200) // brightness
-		message_end()
-		
-		set_rendering(ent, kRenderFxGlowShell, 0, 100, 200, kRenderNormal, 16);
-		
-		set_pev(ent, PEV_NADE_TYPE, NADE_ICEBOMB);
+		if (getLeader(owner))
+		{
+			message_begin(MSG_BROADCAST, SVC_TEMPENTITY);
+			write_byte(TE_BEAMFOLLOW);
+			write_short(ent); // entity
+			write_short(g_sprTrail) // sprite
+			write_byte(10) // life
+			write_byte(10) // width
+			write_byte(50) // r
+			write_byte(150) // g
+			write_byte(255) // b
+			write_byte(200) // brightness
+			message_end()
+			
+			set_rendering(ent, kRenderFxGlowShell, 50, 150, 255, kRenderNormal, 16);
+			
+			set_pev(ent, PEV_NADE_TYPE, NADE_ICEBOMB2);
+		}
+		else
+		{
+			message_begin(MSG_BROADCAST, SVC_TEMPENTITY);
+			write_byte(TE_BEAMFOLLOW);
+			write_short(ent); // entity
+			write_short(g_sprTrail) // sprite
+			write_byte(10) // life
+			write_byte(10) // width
+			write_byte(0) // r
+			write_byte(75) // g
+			write_byte(150) // b
+			write_byte(200) // brightness
+			message_end()
+			
+			set_rendering(ent, kRenderFxGlowShell, 0, 75, 150, kRenderNormal, 16);
+			
+			set_pev(ent, PEV_NADE_TYPE, NADE_ICEBOMB);
+		}
 	}
 }
 
 IceBomb::GrenadeThink(ent)
 {
-	if (pev(ent, PEV_NADE_TYPE) == NADE_ICEBOMB)
+	if (!pev_valid(ent))
+		HOOK_RETURN(HAM_IGNORED);
+	
+	if (pev(ent, PEV_NADE_TYPE) == NADE_ICEBOMB || pev(ent, PEV_NADE_TYPE) == NADE_ICEBOMB2)
 	{
 		new Float:dmgTime;
 		pev(ent, pev_dmgtime, dmgTime);
@@ -133,7 +155,11 @@ stock iceBombExplode(ent)
 			continue;
 		
 		radiusRatio = 1.0 - (entity_range(ent, player) / ICEBOMB_RADIUS);
-		duration = floatmax(ICEBOMB_DURATION_MAX * radiusRatio, ICEBOMB_DURATION_MIN);
+		
+		if (pev(ent, PEV_NADE_TYPE) == NADE_ICEBOMB)
+			duration = floatmax(ICEBOMB_DURATION_MAX[0] * radiusRatio, ICEBOMB_DURATION_MIN[0]);
+		else
+			duration = floatmax(ICEBOMB_DURATION_MAX[1] * radiusRatio, ICEBOMB_DURATION_MIN[1]);
 		
 		if (get_gametime() + duration > g_frozenStart[player] + g_frozenDuration[player])
 			frozenPlayer(player, duration);
@@ -146,6 +172,12 @@ stock iceBlastEffects(ent)
 {
 	new Float:origin[3];
 	pev(ent, pev_origin, origin);
+	
+	new color[3];
+	if (pev(ent, PEV_NADE_TYPE) == NADE_ICEBOMB)
+		color = {0, 75, 150};
+	else
+		color = {50, 150, 255};
 	
 	message_begin_f(MSG_PVS, SVC_TEMPENTITY, origin);
 	write_byte(TE_BEAMCYLINDER); // TE id
@@ -161,9 +193,9 @@ stock iceBlastEffects(ent)
 	write_byte(5); // life
 	write_byte(25); // width
 	write_byte(0); // noise
-	write_byte(0); // red
-	write_byte(75); // green
-	write_byte(150); // blue
+	write_byte(color[0]); // red
+	write_byte(color[1]); // green
+	write_byte(color[2]); // blue
 	write_byte(200); // brightness
 	write_byte(0); // speed
 	message_end();
@@ -182,9 +214,9 @@ stock iceBlastEffects(ent)
 	write_byte(5); // life
 	write_byte(25); // width
 	write_byte(0); // noise
-	write_byte(0); // red
-	write_byte(75); // green
-	write_byte(150); // blue
+	write_byte(color[0]); // red
+	write_byte(color[1]); // green
+	write_byte(color[2]); // blue
 	write_byte(200); // brightness
 	write_byte(0); // speed
 	message_end();
@@ -196,9 +228,9 @@ stock iceBlastEffects(ent)
 	write_coord_f(origin[1]); // position.y
 	write_coord_f(origin[2]); // position.z
 	write_byte(30); // radius in 10's
-	write_byte(0); // red
-	write_byte(75); // green
-	write_byte(150); // blue
+	write_byte(color[0]); // red
+	write_byte(color[1]); // green
+	write_byte(color[2]); // blue
 	write_byte(6); // life in 0.1's
 	write_byte(40) // decay rate in 0.1's
 	message_end();

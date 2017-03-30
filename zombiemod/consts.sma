@@ -1,5 +1,6 @@
 #define Player::%0(%1) 			Player@%0(%1)
 #define Human::%0(%1) 			Human@%0(%1)
+#define Leader::%0(%1) 			Leader@%0(%1)
 #define Zombie::%0(%1) 			Zombie@%0(%1)
 #define Nemesis::%0(%1) 		Nemesis@%0(%1)
 #define Gmonster::%0(%1) 		Gmonster@%0(%1)
@@ -10,7 +11,9 @@
 #define FireBomb::%0(%1) 		FireBomb@%0(%1)
 #define IceBomb::%0(%1) 		IceBomb@%0(%1)
 #define Flare::%0(%1) 			Flare@%0(%1)
+#define VirusBomb::%0(%1) 		VirusBomb@%0(%1)
 #define Buy::%0(%1) 			Buy@%0(%1)
+#define HudInfo::%0(%1) 		HudInfo@%0(%1)
 #define Misc::%0(%1) 			Misc@%0(%1)
 
 #define HOOK_RESULT _hookResult
@@ -32,6 +35,18 @@ enum
 	TEAM_TERRORIST,
 	TEAM_CT,
 	TEAM_SPECTATOR
+};
+
+enum
+{
+	KNIFE_IDLE,
+	KNIFE_ATTACK1HIT,
+	KNIFE_ATTACK2HIT,
+	KNIFE_DRAW,
+	KNIFE_STABHIT,
+	KNIFE_STABMISS,
+	KNIFE_MIDATTACK1HIT,
+	KNIFE_MIDATTACK2HIT
 };
 
 enum
@@ -66,6 +81,7 @@ enum(+=50)
 	TASK_ROUNDSTART = 0,
 	TASK_RESPAWN,
 	TASK_FROZEN,
+	TASK_HUDINFO
 };
 
 enum
@@ -79,6 +95,12 @@ enum
 	GMONSTER_1ST = 1,
 	GMONSTER_2ND,
 	GMONSTER_3RD
+};
+
+enum
+{
+	LEADER_MALE = 1,
+	LEADER_FEMALE,
 };
 
 enum

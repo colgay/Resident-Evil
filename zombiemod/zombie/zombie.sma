@@ -97,6 +97,8 @@ Zombie::Infect_Post(id)
 	strip_user_weapons(id);
 	give_item(id, "weapon_knife");
 	
+	setPlayerClass(id, "Zombie");
+	
 	resetPoisoning(id);
 }
 
@@ -315,6 +317,11 @@ stock registerZombieType(const name[], const desc[], const class[], flags)
 	
 	g_zombieCount++;
 	return g_zombieCount - 1;
+}
+
+stock getZombieTypeName(index, output[], len)
+{
+	ArrayGetString(g_zombieName, index, output, len);
 }
 
 stock setZombieType(id, type)

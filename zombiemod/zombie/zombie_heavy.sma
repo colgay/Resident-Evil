@@ -2,7 +2,8 @@ new g_zombieHeavyId;
 
 HeavyZombie::Precache()
 {
-	precache_model("models/v_knife_r.mdl");
+	precachePlayerModel("zombie_heavy");
+	precache_model("models/resident_evil/v_knife_zombie.mdl");
 }
 
 HeavyZombie::Init()
@@ -20,7 +21,11 @@ HeavyZombie::Infect_Post(id)
 		set_user_gravity(id, 1.0);
 		resetPlayerMaxSpeed(id);
 		
-		cs_set_user_model(id, "vip");
+		cs_set_user_model(id, "zombie_heavy");
+
+		new name[32];
+		getZombieTypeName(g_zombieHeavyId, name, charsmax(name));
+		setPlayerClass(id, name);
 	}
 }
 
@@ -36,11 +41,14 @@ HeavyZombie::SetKnifeModel(id)
 {
 	if (isHeavyZombie(id))
 	{
-		set_pev(id, pev_viewmodel2, "models/v_knife_r.mdl");
+		set_pev(id, pev_viewmodel2, "models/resident_evil/v_knife_zombie.mdl");
 	}
 }
 
 stock bool:isHeavyZombie(id)
 {
-	return bool:(getZombieType(id) == g_zombieHeavyId);
+	if (getZombieType(id) == g_zombieHeavyId)
+		return true;
+	
+	return false;
 }

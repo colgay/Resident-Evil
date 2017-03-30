@@ -2,7 +2,15 @@ new const NEMESIS_HP[] = {3000, 3250};
 new const NEMESIS_HP2[] = {1200, 1000};
 new const Float:NEMESIS_GRAVITY[] = {0.95, 0.6};
 new const Float:NEMESIS_SPEED[] = {1.05, 1.2};
-new const NEMESIS_MODEL[][] = {"vip", "vip"};
+new const NEMESIS_MODEL[][] = {"nemesis", "nemesis_2"};
+
+new const NEMESIS_VIEW_MODEL[][] = 
+{
+	"models/resident_evil/v_knife_nemesis.mdl", 
+	"models/resident_evil/v_knife_zombie.mdl"
+};
+
+new const NEMESIS_P_MODEL[] = "models/resident_evil/p_knife_nemesis.mdl";
 
 const Float:NEMESIS_MUTATION_RATIO = 0.25;
 
@@ -18,7 +26,13 @@ new bool:g_isRocketReloaded;
 
 Nemesis::Precache()
 {
-	precache_model("models/v_knife_r.mdl");
+	precachePlayerModel(NEMESIS_MODEL[0]);
+	precachePlayerModel(NEMESIS_MODEL[1]);
+
+	precache_model(NEMESIS_VIEW_MODEL[0]);
+	precache_model(NEMESIS_VIEW_MODEL[1]);
+	precache_model(NEMESIS_P_MODEL);
+
 	precache_model("models/rpgrocket.mdl");
 	precache_sound("weapons/c4_explode1.wav");
 	precache_sound("weapons/rocketfire1.wav");
@@ -30,6 +44,8 @@ Nemesis::Init()
 	
 	register_touch("rpgrocket", "*", "Nemesis@RocketTouch");
 	register_think("rpgrocket", "Nemesis@RocketThink");
+	
+	RegisterHam(Ham_TakeDamage, "player", "Nemesis@TakeDamage");
 }
 
 Nemesis::NewRound()
@@ -80,17 +96,24 @@ Nemesis::SetKnifeModel(id)
 {
 	if (g_nemesis[id])
 	{
-		set_pev(id, pev_viewmodel2, "models/v_knife_r.mdl");
-		//set_pev(id, pev_weaponmodel2, "models/zombiemod/p_knife_nemesis.mdl");
+		if (g_nemesis[id] == NEMESIS_1ST)
+		{
+			set_pev(id, pev_viewmodel2, NEMESIS_VIEW_MODEL[0]);
+			set_pev(id, pev_weaponmodel2, NEMESIS_P_MODEL);
+		}
+		else if (g_nemesis[id] == NEMESIS_2ND)
+		{
+			set_pev(id, pev_viewmodel2, NEMESIS_VIEW_MODEL[1]);
+		}
 	}
 }
 
-Nemesis::HumanArmorDamage(attacker, &Float:armorRatio, &Float:armorBouns)
+Nemesis::HumanArmorDamage(attacker, &Float:armorRatio, &Float:armorBonus)
 {
 	if (g_nemesis[attacker])
 	{
 		armorRatio = 1.0;
-		armorBouns = 0.0;
+		armorBonus = 0.0;
 	}
 }
 
@@ -119,11 +142,6 @@ Nemesis::Infect_Post(id)
 	{
 		new n = g_nemesis[id] - 1;
 		
-		resetZombie(id);
-
-		setZombie(id, true);
-		g_nemesis[id] = n + 1;
-		
 		set_user_health(id, NEMESIS_HP[n] + (countHumans() * NEMESIS_HP2[n]));
 		set_pev(id, pev_max_health, float(get_user_health(id)));
 		
@@ -131,11 +149,15 @@ Nemesis::Infect_Post(id)
 		
 		cs_set_user_model(id, NEMESIS_MODEL[n]);
 		
-		setZombieType(id, ZCLASS_BOSS);
+		setZombieType(id, -2);
 
 		resetPlayerMaxSpeed(id);
 		
 		g_isRocketReloaded = true;
+	
+		new class[32];
+		formatex(class, charsmax(class), "N-%d", n + 1);
+		setPlayerClass(id, class)
 	}
 }
 
@@ -153,8 +175,38 @@ Nemesis::ResetZombie(id)
 	g_nemesis[id] = false;
 }
 
+public Nemesis::TakeDamage(id, inflictor, attacker, Float:damage, damageBits)
+{
+	if (!is_user_connected(attacker) || isZombie(attacker) == isZombie(id))
+		return;
+	
+	if (isZombie(attacker) && g_nemesis[attacker])
+	{
+		if (inflictor != attacker || (~damageBits & DMG_BULLET))
+			return;
+		
+		if (get_user_weapon(attacker) != CSW_KNIFE)
+			return;
+		
+		if (g_nemesis[attacker] == NEMESIS_2ND)
+		{
+			if (getWeaponAnim(attacker) == KNIFE_STABHIT)
+			{
+				if (random_num(1, 2) == 1)
+				{
+					set_hudmessage(200, 0, 0, -1.0, 0.25, 0, 0.0, 3.0, 1.0, 1.0, 2);
+					show_hudmessage(0, "N-2 使用致命一擊!");
+					
+					SetHamParamFloat(4, 999999.0);
+				}
+			}
+		}
+	}
+}
+
 public CmdNemesis(id)
 {
+	resetZombie(id);
 	g_nemesis[id] = true;
 	infectPlayer(id);
 }
@@ -322,7 +374,7 @@ stock nemesisRocketExplode(rocket, toucher)
 	remove_entity(rocket);
 }
 
-stock bool:getNemesis(id)
+stock getNemesis(id)
 {
 	return g_nemesis[id];
 }

@@ -39,6 +39,9 @@ FireBomb::SetModel(ent, const model[])
 
 FireBomb::GrenadeThink(ent)
 {
+	if (!pev_valid(ent))
+		HOOK_RETURN(HAM_IGNORED);
+	
 	if (pev(ent, PEV_NADE_TYPE) == NADE_FIREBOMB)
 	{
 		new Float:dmgTime;

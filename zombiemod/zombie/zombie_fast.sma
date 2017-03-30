@@ -2,7 +2,8 @@ new g_zombieFastId;
 
 FastZombie::Precache()
 {
-	precache_model("models/v_knife_r.mdl");
+	precachePlayerModel("zombie_fast");
+	precache_model("models/resident_evil/v_knife_zombie.mdl");
 }
 
 FastZombie::Init()
@@ -20,7 +21,13 @@ FastZombie::Infect_Post(id)
 		set_user_gravity(id, 1.0);
 		resetPlayerMaxSpeed(id);
 		
-		cs_set_user_model(id, "vip");
+		cs_set_user_model(id, "zombie_fast");
+
+		new name[32];
+		getZombieTypeName(g_zombieFastId, name, charsmax(name));
+		setPlayerClass(id, name);
+		
+		client_print(id, print_chat, "haha very fast");
 	}
 }
 
@@ -36,11 +43,15 @@ FastZombie::SetKnifeModel(id)
 {
 	if (isFastZombie(id))
 	{
-		set_pev(id, pev_viewmodel2, "models/v_knife_r.mdl");
+		client_print(id, print_chat, "is...fast");
+		set_pev(id, pev_viewmodel2, "models/resident_evil/v_knife_zombie.mdl");
 	}
 }
 
 stock bool:isFastZombie(id)
 {
-	return bool:(getZombieType(id) == g_zombieFastId);
+	if (getZombieType(id) == g_zombieFastId)
+		return true;
+	
+	return false;
 }

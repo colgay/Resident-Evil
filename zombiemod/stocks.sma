@@ -45,6 +45,36 @@ stock Float:getEntSpeed(ent)
 	return vector_length(vel);
 }
 
+stock getWeaponBoxType(ent) 
+{ 
+	new weapon;
+	for (new i = 1; i<= 5; i++)
+	{
+		weapon = get_ent_data_entity(ent, "CWeaponBox", "m_rgpPlayerItems", i);
+		
+		if (pev_valid(weapon))
+			return cs_get_weapon_id(weapon);
+	}
+
+	return 0;
+}
+
+stock precachePlayerModel(const model[])
+{
+	new buffer[128];
+	formatex(buffer, charsmax(buffer), "models/player/%s/%s.mdl", model, model);
+	precache_model(buffer);
+	
+	formatex(buffer, charsmax(buffer), "models/player/%s/%sT.mdl", model, model);
+	if (file_exists(buffer))
+		precache_model(buffer);
+}
+
+stock getWeaponAnim(id)
+{
+	return pev(id, pev_weaponanim);
+}
+
 stock sendScreenFade(id, Float:duration, Float:holdTime, flags, color[3], alpha, bool:external=false)
 {
 	static msgScreenFade;

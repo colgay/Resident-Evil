@@ -23,8 +23,9 @@ Human::Humanize_Post(id)
 
 	cs_reset_user_model(id);
 	
-	setResourcePoint(id, 1000);
-	setPlayerPoint(id, 1000);
+	setResourcePoint(id, 40);
+	
+	setPlayerClass(id, "Survivor");
 	
 	ShowPrimaryMenu(id);
 }
@@ -146,6 +147,11 @@ public HandlePistolMenu(id, menu, item)
 	
 	new weapon = get_weaponid(name);
 	giveWeaponFullAmmo(id, weapon);
+}
+
+stock resetHuman(id)
+{
+	OnResetHuman(id);
 }
 
 stock humanizePlayer(id)
