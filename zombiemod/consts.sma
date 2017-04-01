@@ -15,6 +15,7 @@
 #define Buy::%0(%1) 			Buy@%0(%1)
 #define HudInfo::%0(%1) 		HudInfo@%0(%1)
 #define Misc::%0(%1) 			Misc@%0(%1)
+#define Menu::%0(%1) 			Menu@%0(%1)
 
 #define HOOK_RESULT _hookResult
 #define HOOK_RETURN(%0) return hookReturn(%0)

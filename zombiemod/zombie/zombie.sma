@@ -208,7 +208,7 @@ public CmdChooseZombie(id)
 
 public ShowZombieTypeMenu(id)
 {
-	new menu = menu_create("Choose your zombie type", "HandleZombieTypeMenu");
+	new menu = menu_create("Choose Your Zombie Type", "HandleZombieTypeMenu");
 	new buffer[64]	
 
 	for (new i = 0; i < g_zombieCount; i++)

@@ -79,6 +79,15 @@ Nemesis::CmdStart(id, uc)
 {
 	if (is_user_alive(id) && isZombie(id) && g_nemesis[id] == NEMESIS_1ST && get_user_weapon(id) == CSW_KNIFE)
 	{
+		new buttons = get_uc(uc, UC_Buttons);
+		if (buttons & IN_ATTACK)
+		{
+			buttons &= ~IN_ATTACK;
+			buttons |= IN_ATTACK2;
+			
+			set_uc(uc, UC_Buttons, buttons);
+		}
+		
 		if (!g_isRocketReloaded)
 		{
 			if (get_gametime() >= g_rocketLastLaunch + NEMESIS_ROCKET_DELAY)
@@ -87,7 +96,7 @@ Nemesis::CmdStart(id, uc)
 				client_print(0, print_center, "Nemesis' Rocket Launcher has been reloaded!");
 			}
 		}
-		else if ((get_uc(uc, UC_Buttons) & IN_USE) && (~pev(id, pev_oldbuttons) & IN_USE))
+		else if ((buttons & IN_USE) && (~pev(id, pev_oldbuttons) & IN_USE))
 		{
 			nemesisRocketLaunch(id);
 		}

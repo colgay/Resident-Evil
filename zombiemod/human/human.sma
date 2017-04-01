@@ -42,7 +42,6 @@ new const PISTOL_CLASSES[][] = {"glock18", "usp", "p228", "elite", "fiveseven"};
 const Float:ARMOR_RATIO = 0.0;
 const Float:ARMOR_BONUS = 1.0;
 
-new bool:g_hasTraceAttack;
 new Float:g_attackDirection[3];
 new Float:g_oldVelocity[3];
 
@@ -80,13 +79,11 @@ public Human::TraceAttack(id, attacker, Float:damage, Float:direction[3], trace,
 	if (GetHamReturnStatus() == HAM_SUPERCEDE)
 		return;
 
-	g_hasTraceAttack = true;
 	g_attackDirection = direction;
 }
 
 public Human::TraceAttack_Post(id, attacker, Float:damage, Float:direction[3], trace, damageBits)
 {
-	g_hasTraceAttack = false;
 }
 
 public Human::TakeDamage(id, inflictor, attacker, Float:damage, damageBits)
@@ -173,7 +170,7 @@ public Human::TakeDamage_Post(id, inflictor, attacker, Float:damage, damageBits)
 			else
 				power *= 0.25;
 			
-			client_print(0, print_chat, "real power is %f", power);
+			//client_print(0, print_chat, "real power is %f", power);
 			
 			xs_vec_mul_scalar(vector, power, vector);
 

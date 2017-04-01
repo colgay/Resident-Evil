@@ -16,7 +16,7 @@ new const AMMO_DATA[][AmmoData] =
 	{ 8,  1,  32}, // buckshot
 	{12,  1, 100}, // 45acp
 	{50,  1, 100}, // 57mm
-	{ 1,  1,  1}, // 50ae
+	{ 1,  2,  1}, // 50ae
 	{13,  1,  52}, // 357sig
 	{30,  1, 100}, // 9mm
 	{ 1,  -1,   2}, // Flashbang

@@ -41,6 +41,7 @@
 #include "zombiemod/hudinfo.sma"
 
 #include "zombiemod/ammo.sma"
+#include "zombiemod/menu.sma"
 #include "zombiemod/misc.sma"
 
 #include "zombiemod/stocks.sma"

@@ -62,9 +62,11 @@ public OnPluginInit()
 	LightZombie::Init();
 	HeavyZombie::Init();
 	GameRules::Init();
+	Flare::Init();
 	VirusBomb::Init();
 	Buy::Init();
 	HudInfo::Init();
+	Menu::Init();
 }
 
 public OnPluginNatives()

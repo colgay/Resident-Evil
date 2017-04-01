@@ -12,8 +12,6 @@ GameRules::Init()
 	OrpheuRegisterHookFromObject(g_pGameRules, "Think", "CGameRules", "GameRules@Think_Post", OrpheuHookPost);
 	OrpheuRegisterHookFromObject(g_pGameRules, "FPlayerCanRespawn", "CGameRules", "OnPlayerCanRespawn");
 	OrpheuRegisterHookFromObject(g_pGameRules, "CheckWinConditions", "CGameRules", "OnCheckWinConditions");
-	
-	
 }
 
 public OnInstallGameRules_Post()

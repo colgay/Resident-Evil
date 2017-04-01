@@ -1,8 +1,15 @@
 const NADE_FLARE = 3425;
 
+const Float:FLARE_RADIUS = 240.0;
+
 Flare::Precache()
 {
 	precache_sound("items/nvg_on.wav");
+}
+
+Flare::Init()
+{
+	RegisterHam(Ham_TakeDamage, "player", "Flare@TakeDamage");
 }
 
 Flare::SetModel(ent, const model[])
@@ -103,4 +110,35 @@ Flare::GrenadeThink(ent)
 	}
 	
 	HOOK_RETURN(HAM_IGNORED);
+}
+
+public Flare::TakeDamage(id, inflictor, attacker, Float:damage, damageBits)
+{
+	if (is_user_connected(attacker) && !isZombie(attacker) && isZombie(id))
+	{
+		new Float:origin[3];
+		pev(id, pev_origin, origin);
+		
+		new ent = FM_NULLENT, nade = FM_NULLENT;
+		while ((ent = find_ent_in_sphere(ent, origin, FLARE_RADIUS)) != 0)
+		{
+			if (!pev_valid(ent))
+				continue;
+			
+			if (pev(ent, PEV_NADE_TYPE) != NADE_FLARE)
+				continue;
+
+			if (nade == FM_NULLENT || entity_range(ent, id) < entity_range(nade, id))
+				nade = ent;
+		}
+
+		if (nade > 0)
+		{
+			new Float:ratio = (1.0 - entity_range(nade, id) / FLARE_RADIUS);
+			damage *= 1.0 + (ratio * 0.3);
+			SetHamParamFloat(4, damage);
+
+			client_print(0, print_chat, "dmg m is %.3f", 1.0 + (ratio * 0.3));
+		}
+	}
 }
