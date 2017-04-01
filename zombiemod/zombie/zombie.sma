@@ -10,7 +10,7 @@ new Array:g_zombieFlags;
 new g_zombieCount;
 
 new g_zombieType[33];
-new g_nextZombieType[33] = {-1, ...};
+new g_nextZombieType[33];
 
 new g_poisonType[33];
 new Float:g_poisonLevel[33];
@@ -75,12 +75,15 @@ Zombie::PlayerPreThink(id)
 
 Zombie::Infect_Post(id)
 {
-	g_zombieType[id] = g_nextZombieType[id];
-	
-	if (g_zombieType[id] == -1)
+	if (g_zombieType[id] >= 0)
 	{
-		g_zombieType[id] = 0;
-		ShowZombieTypeMenu(id);
+		g_zombieType[id] = g_nextZombieType[id];
+		
+		if (g_zombieType[id] == -1)
+		{
+			g_zombieType[id] = 0;
+			ShowZombieTypeMenu(id);
+		}
 	}
 	
 	set_user_health(id, 1000);
@@ -91,14 +94,14 @@ Zombie::Infect_Post(id)
 	resetPlayerMaxSpeed(id);
 
 	//cs_set_user_model(id, "vip");
-
+	
+	setPlayerClass(id, "Zombie");
+	
 	dropWeapons(id, 0);
 	
 	strip_user_weapons(id);
 	give_item(id, "weapon_knife");
-	
-	setPlayerClass(id, "Zombie");
-	
+
 	resetPoisoning(id);
 }
 
@@ -347,6 +350,7 @@ stock setZombie(id, bool:value)
 stock resetZombie(id)
 {
 	g_isZombie[id] = false;
+	g_zombieType[id] = 0;
 	
 	OnResetZombie(id);
 }

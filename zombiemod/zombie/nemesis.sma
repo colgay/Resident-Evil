@@ -69,6 +69,8 @@ Nemesis::PlayerPreThink(id)
 			
 			set_hudmessage(255, 0, 0, -1.0, 0.2, 1, 0.0, 3.0, 1.0, 1.0, 1);
 			show_hudmessage(0, "N-2 Detected!");
+			
+			playSound(0, SOUND_WARNING);
 		}
 	}
 }
@@ -136,6 +138,23 @@ Nemesis::AddPoison(id, attacker, Float:damage)
 	HOOK_RETURN(PLUGIN_CONTINUE);
 }
 
+Nemesis::KnockBack(id, &Float:power)
+{
+	switch (g_nemesis[id])
+	{
+		case NEMESIS_1ST:
+			power *= 0.3;
+		case NEMESIS_2ND:
+			power *= 0.5;
+	}
+}
+
+Nemesis::Infect(id)
+{
+	if (g_nemesis[id])
+		setZombieType(id, ZCLASS_BOSS);
+}
+
 Nemesis::Infect_Post(id)
 {
 	if (g_nemesis[id])
@@ -148,8 +167,8 @@ Nemesis::Infect_Post(id)
 		set_user_gravity(id, NEMESIS_GRAVITY[n]);
 		
 		cs_set_user_model(id, NEMESIS_MODEL[n]);
-		
-		setZombieType(id, -2);
+
+		setZombieType(id, ZCLASS_BOSS);
 
 		resetPlayerMaxSpeed(id);
 		

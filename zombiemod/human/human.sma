@@ -1,3 +1,38 @@
+new const Float:WEAPON_KNOCKBACK[] = 
+{
+	0.0, 
+	80.0, //p228 
+	0.0, 
+	550.0, //scout
+	0.0, //hegrenade
+	190.0, //xm1014
+	0.0, //c4
+	70.0, //mac10
+	100.0, //aug
+	0.0, //smoke
+	72.5, //elite
+	73.0, //fiveseven
+	80.0, //ump45
+	140.0, //sg550
+	90.0, //galil
+	90.0, //famas
+	80.0, //usp
+	75.0, //glock18
+	650.0, //awp
+	76.5, //mp5
+	130.0, //m249
+	200.0, //m3
+	110.0, //m4a1
+	70.0, //tmp
+	150.0, //g3sg1
+	0.0, //flash
+	200.0, //deagle
+	100.0, //sg552
+	115.0, //ak47
+	1.0, //knife
+	75.0 //p90
+}
+
 new const PRIMARY_NAMES[][] = {"MAC-10", "TMP", "Scout"};
 new const PRIMARY_CLASSES[][] = {"mac10", "tmp", "scout"};
 
@@ -7,9 +42,16 @@ new const PISTOL_CLASSES[][] = {"glock18", "usp", "p228", "elite", "fiveseven"};
 const Float:ARMOR_RATIO = 0.0;
 const Float:ARMOR_BONUS = 1.0;
 
+new bool:g_hasTraceAttack;
+new Float:g_attackDirection[3];
+new Float:g_oldVelocity[3];
+
 Human::Init()
 {
+	RegisterHam(Ham_TraceAttack, "player", "Human@TraceAttack");
+	RegisterHam(Ham_TraceAttack, "player", "Human@TraceAttack_Post", 1);
 	RegisterHam(Ham_TakeDamage, "player", "Human@TakeDamage");
+	RegisterHam(Ham_TakeDamage, "player", "Human@TakeDamage_Post", 1);
 }
 
 Human::Humanize_Post(id)
@@ -28,6 +70,23 @@ Human::Humanize_Post(id)
 	setPlayerClass(id, "Survivor");
 	
 	ShowPrimaryMenu(id);
+}
+
+public Human::TraceAttack(id, attacker, Float:damage, Float:direction[3], trace, damageBits)
+{
+	if (!pev_valid(id))
+		return;
+	
+	if (GetHamReturnStatus() == HAM_SUPERCEDE)
+		return;
+
+	g_hasTraceAttack = true;
+	g_attackDirection = direction;
+}
+
+public Human::TraceAttack_Post(id, attacker, Float:damage, Float:direction[3], trace, damageBits)
+{
+	g_hasTraceAttack = false;
 }
 
 public Human::TakeDamage(id, inflictor, attacker, Float:damage, damageBits)
@@ -75,6 +134,53 @@ public Human::TakeDamage(id, inflictor, attacker, Float:damage, damageBits)
 			
 			damage = newDamage;			
 			SetHamParamFloat(4, damage);
+		}
+	}
+	
+	pev(id, pev_velocity, g_oldVelocity);
+}
+
+public Human::TakeDamage_Post(id, inflictor, attacker, Float:damage, damageBits)
+{
+	if (!pev_valid(id) || !is_user_connected(attacker))
+		return;
+	
+	if (inflictor == attacker && (damageBits & DMG_BULLET))
+	{
+		set_pev(id, pev_velocity, g_oldVelocity);
+		
+		if (isZombie(id) && !isZombie(attacker))
+		{
+			new Float:velocity[3];
+			pev(id, pev_velocity, velocity);
+			
+			new Float:vector[3];
+			vector = g_attackDirection;
+			
+			new Float:power = 0.0;
+			if (get_user_weapon(attacker) == CSW_KNIFE)
+			{
+				OnKnifeKnockBack(id, attacker, damage, power);
+			}
+			else
+			{
+				power = WEAPON_KNOCKBACK[get_user_weapon(attacker)];
+				OnKnockBack(id, attacker, damage, power);
+			}
+			
+			if (pev(id, pev_flags) & FL_ONGROUND)
+				power *= 1.0 / getPlayerDataF(id, "m_flVelocityModifier");
+			else
+				power *= 0.25;
+			
+			client_print(0, print_chat, "real power is %f", power);
+			
+			xs_vec_mul_scalar(vector, power, vector);
+
+			velocity[0] += vector[0];
+			velocity[1] += vector[1];
+			
+			set_pev(id, pev_velocity, velocity);
 		}
 	}
 }

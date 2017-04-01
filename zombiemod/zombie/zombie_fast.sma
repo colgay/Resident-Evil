@@ -23,11 +23,9 @@ FastZombie::Infect_Post(id)
 		
 		cs_set_user_model(id, "zombie_fast");
 
-		new name[32];
-		getZombieTypeName(g_zombieFastId, name, charsmax(name));
+		new name[32] = "Zombie - ";
+		getZombieTypeName(g_zombieFastId, name[9], charsmax(name) - 9);
 		setPlayerClass(id, name);
-		
-		client_print(id, print_chat, "haha very fast");
 	}
 }
 
@@ -43,9 +41,14 @@ FastZombie::SetKnifeModel(id)
 {
 	if (isFastZombie(id))
 	{
-		client_print(id, print_chat, "is...fast");
 		set_pev(id, pev_viewmodel2, "models/resident_evil/v_knife_zombie.mdl");
 	}
+}
+
+FastZombie::KnockBack(id, &Float:power)
+{
+	if (isFastZombie(id))
+		power *= 1.5;
 }
 
 stock bool:isFastZombie(id)

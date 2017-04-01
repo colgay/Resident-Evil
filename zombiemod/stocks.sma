@@ -59,6 +59,11 @@ stock getWeaponBoxType(ent)
 	return 0;
 }
 
+stock playSound(id, const sound[])
+{
+	client_cmd(id, "spk ^"%s^"", sound);
+}
+
 stock precachePlayerModel(const model[])
 {
 	new buffer[128];

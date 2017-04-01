@@ -240,6 +240,8 @@ public OnSetModel(ent, const model[])
 
 public OnPlayerInfect(id, attacker)
 {
+	Nemesis::Infect(id)
+	Gmonster::Infect(id)
 }
 
 public OnPlayerInfect_Post(id, attacker)
@@ -280,6 +282,20 @@ public OnHumanInfection(id, attacker, Float:damage)
 	
 	Nemesis::HumanInfection(attacker);
 	return HOOK_RESULT;
+}
+
+public OnKnifeKnockBack(id, attacker, Float:damage, &Float:power)
+{
+	
+}
+
+public OnKnockBack(id, attacker, Float:damage, &Float:power)
+{
+	Nemesis::KnockBack(id, power);
+	Gmonster::KnockBack(id, power);
+	FastZombie::KnockBack(id, power);
+	HeavyZombie::KnockBack(id, power);
+	LightZombie::KnockBack(id, power);
 }
 
 public OnAddPoison(id, attacker, Float:damage)

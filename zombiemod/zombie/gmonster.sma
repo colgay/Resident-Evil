@@ -41,23 +41,27 @@ Gmonster::PlayerPreThink(id)
 		if (g_gmonster[id] == GMONSTER_1ST)
 		{
 			if (get_user_health(id) <= pev(id, pev_max_health) * G1_MUTATION_RATIO)
-			{
-				set_hudmessage(200, 0, 100, -1.0, 0.2, 1, 0.0, 3.0, 1.0, 1.0, 1);
-				show_hudmessage(0, "G-2 Detected!");
-				
+			{				
 				g_gmonster[id]++;
 				infectPlayer(id);
+
+				set_hudmessage(200, 0, 100, -1.0, 0.2, 1, 0.0, 3.0, 1.0, 1.0, 1);
+				show_hudmessage(0, "G-2 Detected!");
+
+				playSound(0, SOUND_WARNING);
 			}
 		}
 		else if (g_gmonster[id] == GMONSTER_2ND)
 		{
 			if (get_user_health(id) <= pev(id, pev_max_health) * G2_MUTATION_RATIO)
-			{
+			{				
+				g_gmonster[id]++;
+				infectPlayer(id);
+
 				set_hudmessage(200, 0, 100, -1.0, 0.2, 1, 0.0, 3.0, 1.0, 1.0, 1);
 				show_hudmessage(0, "G-3 Detected!");
 				
-				g_gmonster[id]++;
-				infectPlayer(id);
+				playSound(0, SOUND_WARNING);
 			}
 		}
 	}
@@ -88,6 +92,12 @@ Gmonster::ResetZombie(id)
 	g_gmonster[id] = false;
 }
 
+Gmonster::Infect(id)
+{
+	if (g_gmonster[id])
+		setZombieType(id, ZCLASS_BOSS);
+}
+
 Gmonster::Infect_Post(id)
 {
 	if (g_gmonster[id])
@@ -102,14 +112,25 @@ Gmonster::Infect_Post(id)
 
 		cs_set_user_model(id, GMONSTER_MODEL[g]);
 		
-		setZombieType(id, -2);
-		
 		if (g_gmonster[id] > GMONSTER_1ST)
 			give_item(id, "weapon_hegrenade");
 
 		new class[32];
 		formatex(class, charsmax(class), "G-%d", g + 1);
 		setPlayerClass(id, class)
+	}
+}
+
+Gmonster::KnockBack(id, &Float:power)
+{
+	switch (g_gmonster[id])
+	{
+		case GMONSTER_1ST:
+			power *= 0.9;
+		case GMONSTER_2ND:
+			power *= 0.6;
+		case GMONSTER_3RD:
+			power *= 0.4;
 	}
 }
 

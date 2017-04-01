@@ -23,8 +23,8 @@ HeavyZombie::Infect_Post(id)
 		
 		cs_set_user_model(id, "zombie_heavy");
 
-		new name[32];
-		getZombieTypeName(g_zombieHeavyId, name, charsmax(name));
+		new name[32] = "Zombie - ";
+		getZombieTypeName(g_zombieFastId, name[9], charsmax(name) - 9);
 		setPlayerClass(id, name);
 	}
 }
@@ -41,8 +41,15 @@ HeavyZombie::SetKnifeModel(id)
 {
 	if (isHeavyZombie(id))
 	{
+		client_print(0, print_chat, "haha heavy");
 		set_pev(id, pev_viewmodel2, "models/resident_evil/v_knife_zombie.mdl");
 	}
+}
+
+HeavyZombie::KnockBack(id, &Float:power)
+{
+	if (isHeavyZombie(id))
+		power *= 0.5;
 }
 
 stock bool:isHeavyZombie(id)

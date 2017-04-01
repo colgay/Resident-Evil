@@ -23,8 +23,8 @@ LightZombie::Infect_Post(id)
 		
 		cs_set_user_model(id, "zombie_light");
 
-		new name[32];
-		getZombieTypeName(g_zombieLightId, name, charsmax(name));
+		new name[32] = "Zombie - ";
+		getZombieTypeName(g_zombieFastId, name[9], charsmax(name) - 9);
 		setPlayerClass(id, name);
 	}
 }
@@ -43,6 +43,12 @@ LightZombie::SetKnifeModel(id)
 	{
 		set_pev(id, pev_viewmodel2, "models/resident_evil/v_knife_zombie.mdl");
 	}
+}
+
+LightZombie::KnockBack(id, &Float:power)
+{
+	if (isLightZombie(id))
+		power *= 2.0;
 }
 
 stock bool:isLightZombie(id)

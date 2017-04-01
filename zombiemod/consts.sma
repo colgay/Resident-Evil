@@ -24,8 +24,8 @@
 #define FFADE_MODULATE 	0x0002 // Modulate (don't blend)
 #define FFADE_STAYOUT 	0x0004 // ignores the duration, stays faded out until new ScreenFade message received
 
-#define ZCLASS_SPECIAL -1
-#define ZCLASS_BOSS -2
+#define ZCLASS_SPECIAL -2
+#define ZCLASS_BOSS -3
 
 #define PEV_NADE_TYPE pev_flTimeStepSound
 
@@ -109,3 +109,5 @@ enum
 	POISON_N_VIRUS,
 	POISON_G_VIRUS
 };
+
+new const SOUND_WARNING[] = "resident_evil/warning.wav";

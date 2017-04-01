@@ -8,4 +8,6 @@ Misc::Precache()
 	g_sprSteam = precache_model("sprites/steam1.spr");
 	
 	g_modelGlass = precache_model("models/glassgibs.mdl");
+
+	precache_sound(SOUND_WARNING);
 }
