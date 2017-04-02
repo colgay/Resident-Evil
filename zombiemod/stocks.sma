@@ -172,6 +172,37 @@ stock setPlayerTeam(id, team, bool:scoreBoard=true, bool:checkTeam=true)
 	}
 }
 
+stock countRespawnables()
+{
+	new count = 0;
+	
+	for (new i = 1; i <= g_maxClients; i++)
+	{
+		if (is_user_connected(i) && isRespawnable(i))
+			count++;
+	}
+	
+	return count;
+}
+
+stock OrpheuStruct:get_ppmove()
+{
+	return OrpheuGetStructFromAddress(OrpheuStructPlayerMove, OrpheuMemoryGet("ppmove"));
+}
+
+stock countAlivePlayers()
+{
+	new count = 0;
+	
+	for (new i = 1; i <= g_maxClients; i++)
+	{
+		if (is_user_alive(i))
+			count++;
+	}
+	
+	return count;
+}
+
 stock updateScoreInfo(id, class=0)
 {
 	static msgScoreInfo;

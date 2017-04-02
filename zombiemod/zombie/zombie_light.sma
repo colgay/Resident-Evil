@@ -51,6 +51,12 @@ LightZombie::KnockBack(id, &Float:power)
 		power *= 2.0;
 }
 
+LightZombie::PainShock(id, &Float:modifier)
+{
+	if (isZombie(id) && isLightZombie(id))
+		applyPainShock(modifier, 0.7);
+}
+
 stock bool:isLightZombie(id)
 {
 	if (getZombieType(id) == g_zombieLightId)

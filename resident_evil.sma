@@ -7,6 +7,8 @@
 #include <hamsandwich>
 #include <xs>
 #include <orpheu>
+#include <orpheu_advanced>
+#include <orpheu_memory>
 #include <orpheu_stocks>
 #include <gamedata_stocks>
 #include <nvault>

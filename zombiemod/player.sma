@@ -1,3 +1,5 @@
+const Float:MAX_PAINSHOCK_TIME = 4.0;
+
 new g_resourcePoint[33];
 new g_point[33];
 new Float:g_maxArmor[33];
@@ -6,14 +8,24 @@ new g_playerClass[33][32];
 new Float:g_damageDealt[33];
 new g_knifePoint[33];
 
+new Float:g_painShockLastTime[33];
+new Float:g_painShock[33];
+
+new OrpheuStruct:g_ppmove;
+
 Player::Init()
 {
+	register_clcmd("set_painshock", "CmdPainShock");
+	
 	register_event("ResetHUD", "Player@ResetHUD", "b");
 	register_message(get_user_msgid("HideWeapon"), "Player@HideWeapon");
 
 	RegisterHam(Ham_TraceAttack, "player", "Player@TraceAttack");
 	RegisterHam(Ham_TakeDamage, "player", "Player@TakeDamage");
 	RegisterHam(Ham_TakeDamage, "player", "Player@TakeDamage_Post", 1);
+
+	OrpheuRegisterHook(OrpheuGetFunction("PM_Move"), "OnPM_Move");
+	OrpheuRegisterHook(OrpheuGetFunction("PM_ReduceTimers"), "OnPM_ReduceTimers");
 }
 
 Player::NewRound()
@@ -81,6 +93,49 @@ Player::DeathMsg(killer, victim)
 	}
 }
 
+Player::PlayerPreThink(id)
+{
+	if (is_user_alive(id))
+	{
+		new Float:currentTime = get_gametime();
+		
+		if (g_painShock[id] < 0.0)
+			g_painShock[id] = 0.0;
+
+		if (g_painShock[id] < 1.0)
+			g_painShock[id] += ((currentTime - g_painShockLastTime[id]) / MAX_PAINSHOCK_TIME);
+
+		if (g_painShock[id] > 1.0)
+			g_painShock[id] = 1.0
+
+		g_painShockLastTime[id] = get_gametime();
+	}
+}
+
+public OnPM_Move(OrpheuStruct:ppmove, server)
+{
+	g_ppmove = ppmove;
+}
+
+public OnPM_ReduceTimers()
+{
+	new id = OrpheuGetStructMember(g_ppmove, "player_index") + 1;
+	
+	if (is_user_alive(id) && g_painShock[id] < 1.0)
+	{
+		new Float:maxspeed = Float:OrpheuGetStructMember(g_ppmove, "maxspeed");
+		OrpheuSetStructMember(g_ppmove, "maxspeed", maxspeed * g_painShock[id]);
+	}
+}
+
+public CmdPainShock(id)
+{
+	new arg[16];
+	read_argv(1, arg, charsmax(arg));
+	
+	g_painShock[id] = str_to_float(arg);
+}
+
 public Player::TraceAttack(id, attacker, Float:damage, Float:direction[3], tr, damageBits)
 {
 	//ha
@@ -125,9 +180,19 @@ public Player::TakeDamage(id, inflictor, attacker, Float:damage, damageBits)
 	}
 }
 
-public Player::TakeDamage_Post(id)
+public Player::TakeDamage_Post(id, inflictor, attacker, Float:damage, damageBits)
 {
-	//ha
+	if (is_user_connected(attacker) && isZombie(attacker) != isZombie(id))
+	{
+		new Float:modifier = 1.0;
+		OnPainShock(id, inflictor, attacker, damage, damageBits, modifier);
+		
+		if (modifier < g_painShock[id])
+			g_painShock[id] = modifier;
+
+		setPlayerDataF(id, "m_flVelocityModifier", 1.0);
+		client_print(0, print_chat, "painshock is %f", g_painShock[id]);
+	}
 }
 
 public Player::HideWeapon(msgid, dest, id)
@@ -166,6 +231,14 @@ stock givePlayerReward(id, point=0, rs=0)
 	
 	set_hudmessage(0, 255, 0, -1.0, 0.8, 0, 0.0, 1.0, 1.0, 1.0, 3);
 	show_hudmessage(id, message);
+}
+
+stock applyPainShock(&Float:input, Float:ratio)
+{
+	if (ratio > 1.0)
+		input += (1.0 - input) * (ratio - 1.0);
+	else
+		input *= ratio;
 }
 
 stock getPlayerClass(id, output[], len)

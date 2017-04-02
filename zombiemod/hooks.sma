@@ -29,6 +29,7 @@ public OnPluginInit()
 	
 	register_forward(FM_PlayerPreThink, "OnPlayerPreThink");
 	register_forward(FM_CmdStart, "OnCmdStart");
+	register_forward(FM_CmdStart, "OnCmdStart_Post", 1);
 	register_forward(FM_SetModel, "OnSetModel");
 	
 	unregister_forward(FM_Spawn, g_fwEntSpawn);
@@ -107,6 +108,7 @@ public OnEventDeathMsg()
 	read_data(4, weaponName, charsmax(weaponName));*/
 	
 	Player::DeathMsg(killer, victim);
+	Buy::DeathMsg(killer, victim);
 }
 
 public OnClientDisconnect(id)
@@ -116,6 +118,7 @@ public OnClientDisconnect(id)
 	Zombie::Disconnect(id);
 	FireBomb::Disconnect(id);
 	IceBomb::Disconnect(id);
+	GameRules::Disconnect(id);
 }
 
 public OnClientPutInServer(id)
@@ -140,6 +143,7 @@ public OnPlayerSpawn_Post(id)
 
 public OnPlayerKilled(id, attacker, shouldGib)
 {
+	GameRules::PlayerKilled(id);
 	Zombie::Killed(id);
 	FireBomb::Killed(id);
 	IceBomb::Killed(id);
@@ -147,7 +151,6 @@ public OnPlayerKilled(id, attacker, shouldGib)
 
 public OnPlayerKilled_Post(id, attacker, shouldGib)
 {
-	GameRules::PlayerKilled_Post(id);
 	//Player::Killed_Post(id, attacker);
 	Leader::Killed_Post(id);
 	Zombie::Killed_Post(id);
@@ -221,8 +224,16 @@ public OnCmdStart(id, uc)
 	Nemesis::CmdStart(id, uc);
 }
 
+public OnCmdStart_Post(id, uc)
+{
+	set_uc(uc, UC_ForwardMove, 1.0);
+	set_uc(uc, UC_SideMove, 1.0);
+	set_uc(uc, UC_UpMove, 1.0);
+}
+
 public OnPlayerPreThink(id)
 {
+	Player::PlayerPreThink(id);
 	Zombie::PlayerPreThink(id);
 	Nemesis::PlayerPreThink(id);
 	Gmonster::PlayerPreThink(id);
@@ -288,7 +299,8 @@ public OnHumanInfection(id, attacker, Float:damage)
 
 public OnKnifeKnockBack(id, attacker, Float:damage, &Float:power)
 {
-	
+	Human::KnifeKnockBack(id, attacker, power);
+	Leader::KnifeKnockBack(attacker, power);
 }
 
 public OnKnockBack(id, attacker, Float:damage, &Float:power)
@@ -298,6 +310,18 @@ public OnKnockBack(id, attacker, Float:damage, &Float:power)
 	FastZombie::KnockBack(id, power);
 	HeavyZombie::KnockBack(id, power);
 	LightZombie::KnockBack(id, power);
+}
+
+public OnPainShock(id, inflictor, attacker, Float:damage, damageBits, &Float:modifier)
+{
+	Human::PainShock(id, damage, modifier);
+	Leader::PainShock(id, modifier);
+	Zombie::PainShock(id, inflictor, attacker, damageBits, modifier);
+	Nemesis::PainShock(id, attacker, modifier);
+	Gmonster::PainShock(id, attacker, modifier);
+	FastZombie::PainShock(id, modifier);
+	HeavyZombie::PainShock(id, modifier);
+	LightZombie::PainShock(id, modifier);
 }
 
 public OnAddPoison(id, attacker, Float:damage)
@@ -319,6 +343,16 @@ public OnSetZombieKnifeModel(id)
 	HeavyZombie::SetKnifeModel(id);
 }
 
+public OnBuyMenuAddText(id, item)
+{
+	Buy::BuyMenuAddText(id, item);
+}
+
+public OnGameStart()
+{
+	Buy::GameStart();
+}
+
 public OnResetHuman(id)
 {
 	Leader::ResetHuman(id);
@@ -328,6 +362,7 @@ public OnResetZombie(id)
 {
 	Nemesis::ResetZombie(id);
 	Gmonster::ResetZombie(id);
+	Buy::ResetZombie(id);
 }
 
 public OnBuyItem(id, item)

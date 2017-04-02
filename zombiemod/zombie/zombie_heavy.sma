@@ -52,6 +52,12 @@ HeavyZombie::KnockBack(id, &Float:power)
 		power *= 0.5;
 }
 
+HeavyZombie::PainShock(id, &Float:modifier)
+{
+	if (isZombie(id) && isHeavyZombie(id))
+		applyPainShock(modifier, 1.3);
+}
+
 stock bool:isHeavyZombie(id)
 {
 	if (getZombieType(id) == g_zombieHeavyId)

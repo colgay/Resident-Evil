@@ -51,6 +51,12 @@ FastZombie::KnockBack(id, &Float:power)
 		power *= 1.5;
 }
 
+FastZombie::PainShock(id, &Float:modifier)
+{
+	if (isZombie(id) && isFastZombie(id))
+		applyPainShock(modifier, 0.8);
+}
+
 stock bool:isFastZombie(id)
 {
 	if (getZombieType(id) == g_zombieFastId)

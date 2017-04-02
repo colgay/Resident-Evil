@@ -158,6 +158,24 @@ Nemesis::KnockBack(id, &Float:power)
 	}
 }
 
+Nemesis::PainShock(id, attacker, &Float:modifier)
+{
+	if (isZombie(id) && g_nemesis[id])
+	{
+		if (g_nemesis[id] == NEMESIS_1ST)
+			applyPainShock(modifier, 1.4);
+		else
+			applyPainShock(modifier, 1.275);
+	}
+	else if (isZombie(attacker) && g_nemesis[attacker])
+	{
+		if (g_nemesis[attacker] == NEMESIS_1ST)
+			applyPainShock(modifier, 0.7);
+		else
+			applyPainShock(modifier, 0.8);
+	}
+}
+
 Nemesis::Infect(id)
 {
 	if (g_nemesis[id])

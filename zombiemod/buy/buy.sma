@@ -84,6 +84,9 @@ new Array:g_buyItemCost;
 new Array:g_buyItemRS;
 new g_buyItemCount;
 
+new g_virusBombInStock;
+new g_antidoteRequires[33];
+
 Buy::Precache()
 {
 	g_buyItemName = ArrayCreate(32);
@@ -113,6 +116,42 @@ Buy::Init()
 	}
 }
 
+Buy::GameStart()
+{
+	g_virusBombInStock = floatround(countAlivePlayers() * 0.5);
+}
+
+Buy::BuyMenuAddText(id, item)
+{
+	switch (item)
+	{
+		case BUYITEM_VIRUSBOMB:
+		{
+			formatex(g_someText, charsmax(g_someText), "\r(%d)", g_virusBombInStock);
+		}
+		case BUYITEM_ANTIDOTE:
+		{
+			formatex(g_someText, charsmax(g_someText), "\r(%d/2)", g_antidoteRequires[id]);
+		}
+	}
+}
+
+Buy::DeathMsg(killer, victim)
+{
+	if (!is_user_connected(killer) || !is_user_connected(victim) || isZombie(killer) == isZombie(victim))
+		return;
+	
+	if (isZombie(killer))
+	{
+		g_antidoteRequires[killer]++;
+	}
+}
+
+Buy::ResetZombie(id)
+{
+	g_antidoteRequires[id] = 0;
+}
+
 Buy::BuyItem(id, item)
 {
 	switch (item)
@@ -122,6 +161,20 @@ Buy::BuyItem(id, item)
 			if (user_has_weapon(id, CSW_HEGRENADE))
 			{
 				client_print(id, print_center, "#Cstrike_TitlesTXT_Cannot_Carry_Anymore");
+				HOOK_RETURN(PLUGIN_HANDLED);
+			}
+			
+			if (g_virusBombInStock < 1)
+			{
+				client_print(id, print_center, "Out of stock");
+				HOOK_RETURN(PLUGIN_HANDLED);
+			}
+		}
+		case BUYITEM_ANTIDOTE:
+		{
+			if (g_antidoteRequires[id] < 2)
+			{
+				client_print(id, print_center, "You must kill at least 2 humans to use it");
 				HOOK_RETURN(PLUGIN_HANDLED);
 			}
 		}
@@ -220,7 +273,12 @@ Buy::BuyItem_Post(id, item)
 	{
 		case BUYITEM_VIRUSBOMB:
 		{
+			g_virusBombInStock--;
 			give_item(id, "weapon_hegrenade");
+		}
+		case BUYITEM_ANTIDOTE:
+		{
+			humanizePlayer(id);
 		}
 		case BUYITEM_VACCINE1:
 		{
@@ -234,7 +292,7 @@ Buy::BuyItem_Post(id, item)
 					resetPoisoning(id);
 				else
 				{
-					client_print(id, print_center, "你中毒太深, 請再買一次疫苗");
+					client_print(id, print_center, "你太毒, 請再買一次 Vaccine 解毒");
 					setPoisonLevel(id, getPoisonLevel(id) - 0.2);
 				}
 			}
@@ -254,7 +312,7 @@ Buy::BuyItem_Post(id, item)
 					resetPoisoning(id);
 				else
 				{
-					client_print(id, print_center, "你中毒太深, 請再買一次疫苗");
+					client_print(id, print_center, "你太毒, 請再買一次 Vaccine 解毒");
 					setPoisonLevel(id, getPoisonLevel(id) - 0.5);
 				}
 			}
@@ -406,6 +464,12 @@ public ShowBuyMenu(id)
 		
 		formatex(text, charsmax(text), "%a", ArrayGetStringHandle(g_buyItemName, i));
 		
+		g_someText[0] = 0;
+		OnBuyMenuAddText(id, i);
+		
+		if (g_someText[0])
+			format(text, charsmax(text), "%s %s", text, g_someText);
+		
 		ArrayGetString(g_buyItemDesc, i, desc, charsmax(desc));
 		if (desc[0])
 			format(text, charsmax(text), "%s \d%s", text, desc);
@@ -469,7 +533,6 @@ public HandleBuyMenu(id, menu, item)
 	
 	OnBuyItem_Post(id, item2);
 }
-
 
 stock buyGunAmmo(id, slot)
 {

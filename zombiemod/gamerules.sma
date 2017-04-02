@@ -2,6 +2,8 @@ new bool:g_isGameStarted;
 new bool:g_allowRespawn;
 new g_countDown;
 
+new bool:g_canRespawn[33];
+
 GameRules::Precache()
 {
 	OrpheuRegisterHook(OrpheuGetFunction("InstallGameRules"), "OnInstallGameRules_Post", OrpheuHookPost);
@@ -130,7 +132,7 @@ public OrpheuHookReturn:OnCheckWinConditions()
 		{
 			terminateRound2(5.0, WinStatus_Terrorist, Event_Terrorists_Win, "#Terrorists_Win", "terwin", true);
 		}
-		else if ((!g_allowRespawn && !countZombies()) || (!countZombies() && !countDeadZombies()))
+		else if ((!g_allowRespawn && !countZombies()) || (!countZombies() && !countRespawnables()))
 		{
 			terminateRound2(5.0, WinStatus_CT, Event_CTs_Win, "#CTs_Win", "ctwin", true);
 		}
@@ -178,16 +180,22 @@ GameRules::PlayerSpawn_Post(id)
 			infectPlayer(id);
 		else
 			humanizePlayer(id);
+		
+		g_canRespawn[id] = false;
 	}
 }
 
-GameRules::PlayerKilled_Post(id)
+GameRules::PlayerKilled(id)
 {
 	if (canPlayerRespawn(id))
 	{
+		g_canRespawn[id] = true;
+		
 		remove_task(id + TASK_RESPAWN);
 		set_task(3.0, "TaskRespawnPlayer", id + TASK_RESPAWN);
 	}
+	else
+		g_canRespawn[id] = false;
 }
 
 GameRules::Infect_Post(id)
@@ -202,6 +210,12 @@ GameRules::Humanize_Post(id)
 	checkWinConditions();
 }
 
+GameRules::Disconnect(id)
+{
+	remove_task(id + TASK_RESPAWN);
+	g_canRespawn[id] = false;
+}
+
 public TaskRespawnPlayer(taskid)
 {
 	new id = taskid - TASK_RESPAWN;
@@ -211,6 +225,8 @@ public TaskRespawnPlayer(taskid)
 		setZombie(id, true);
 		ExecuteHam(Ham_CS_RoundRespawn, id);
 	}
+	else
+		g_canRespawn[id] = false;
 }
 
 public TaskCountDown()
@@ -292,6 +308,8 @@ public MakeGameStart()
 	
 	g_isGameStarted = true;
 	g_allowRespawn = true;
+
+	OnGameStart();
 }
 
 public TaskCountPlayers()
@@ -332,6 +350,11 @@ stock bool:canPlayerRespawn(id)
 		return false;
 	
 	return true;
+}
+
+stock bool:isRespawnable(id)
+{
+	return g_canRespawn[id];
 }
 
 stock countTeamPlayers()

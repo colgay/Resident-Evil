@@ -1,38 +1,3 @@
-new const Float:WEAPON_KNOCKBACK[] = 
-{
-	0.0, 
-	80.0, //p228 
-	0.0, 
-	550.0, //scout
-	0.0, //hegrenade
-	190.0, //xm1014
-	0.0, //c4
-	70.0, //mac10
-	100.0, //aug
-	0.0, //smoke
-	72.5, //elite
-	73.0, //fiveseven
-	80.0, //ump45
-	140.0, //sg550
-	90.0, //galil
-	90.0, //famas
-	80.0, //usp
-	75.0, //glock18
-	650.0, //awp
-	76.5, //mp5
-	130.0, //m249
-	200.0, //m3
-	110.0, //m4a1
-	70.0, //tmp
-	150.0, //g3sg1
-	0.0, //flash
-	200.0, //deagle
-	100.0, //sg552
-	115.0, //ak47
-	1.0, //knife
-	75.0 //p90
-}
-
 new const PRIMARY_NAMES[][] = {"MAC-10", "TMP", "Scout"};
 new const PRIMARY_CLASSES[][] = {"mac10", "tmp", "scout"};
 
@@ -69,6 +34,52 @@ Human::Humanize_Post(id)
 	setPlayerClass(id, "Survivor");
 	
 	ShowPrimaryMenu(id);
+}
+
+Human::PainShock(id, Float:damage, &Float:modifier)
+{
+	if (!isZombie(id))
+	{
+		//new Float:dmgMultiplier = 1.0;
+		new hitGroup = get_ent_data(id, "CBaseMonster", "m_LastHitGroup");
+		
+		switch (hitGroup)
+		{
+			case HIT_HEAD:
+			{
+				applyPainShock(modifier, 0.5);
+				//dmgMultiplier = 4.0;
+			}
+			case HIT_CHEST:
+			{
+				applyPainShock(modifier, 0.75);
+			}
+			case HIT_STOMACH:
+			{
+				applyPainShock(modifier, 0.6);
+				//dmgMultiplier = 1.25
+			}
+			case HIT_LEFTLEG, HIT_RIGHTLEG:
+			{
+				applyPainShock(modifier, 0.4);
+				//dmgMultiplier = 0.75;
+			}
+			default:
+			{
+				applyPainShock(modifier, 0.65);
+			}
+		}
+		
+		// If player has armor
+		if (damage == 0.0)
+			applyPainShock(modifier, 1.3);
+	}
+}
+
+Human::KnifeKnockBack(id, attacker, &Float:power)
+{
+	if (!isZombie(attacker) && getWeaponAnim(attacker) == KNIFE_STABHIT && getZombieType(id) >= 0)
+		power = 700.0;
 }
 
 public Human::TraceAttack(id, attacker, Float:damage, Float:direction[3], trace, damageBits)
@@ -154,6 +165,11 @@ public Human::TakeDamage_Post(id, inflictor, attacker, Float:damage, damageBits)
 			new Float:vector[3];
 			vector = g_attackDirection;
 			
+			new Float:angles[3];
+			vector_to_angle(vector, angles);
+			angles[0] = 0.0;
+			angle_vector(angles, ANGLEVECTOR_FORWARD, vector);
+			
 			new Float:power = 0.0;
 			if (get_user_weapon(attacker) == CSW_KNIFE)
 			{
@@ -165,9 +181,7 @@ public Human::TakeDamage_Post(id, inflictor, attacker, Float:damage, damageBits)
 				OnKnockBack(id, attacker, damage, power);
 			}
 			
-			if (pev(id, pev_flags) & FL_ONGROUND)
-				power *= 1.0 / getPlayerDataF(id, "m_flVelocityModifier");
-			else
+			if (~pev(id, pev_flags) & FL_ONGROUND)
 				power *= 0.25;
 			
 			//client_print(0, print_chat, "real power is %f", power);
@@ -176,6 +190,7 @@ public Human::TakeDamage_Post(id, inflictor, attacker, Float:damage, damageBits)
 
 			velocity[0] += vector[0];
 			velocity[1] += vector[1];
+			velocity[2] += vector[2];
 			
 			set_pev(id, pev_velocity, velocity);
 		}

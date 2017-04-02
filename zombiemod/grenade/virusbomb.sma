@@ -148,7 +148,7 @@ stock virusBombExplode(ent)
 			
 			sendDamage(player, 0, 1, DMG_ACID, origin);
 			
-			modifier = 1.0 - (0.75 * ratio);
+			modifier = 1.0 - ratio;
 			if (modifier < getPlayerDataF(player, "m_flVelocityModifier"))
 				setPlayerDataF(player, "m_flVelocityModifier", modifier);
 		}

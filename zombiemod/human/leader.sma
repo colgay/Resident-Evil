@@ -13,6 +13,7 @@ Leader::Init()
 	register_clcmd("leader", "CmdLeader");
 
 	RegisterHam(Ham_TakeDamage, "player", "Leader@TakeDamage");
+	RegisterHam(Ham_Spawn, "weapon_deagle", "Leader@DeagleSpawn_P", 1);
 }
 
 Leader::Humanize_Post(id)
@@ -110,6 +111,25 @@ Leader::ResetHuman(id)
 	g_leader[id] = false;
 }
 
+Leader::PainShock(id, &Float:modifier)
+{
+	if (!isZombie(id) && g_leader[id])
+	{
+		applyPainShock(modifier, 1.25);
+	}
+}
+
+Leader::KnifeKnockBack(attacker, &Float:power)
+{
+	if (getLeader(attacker) && getWeaponAnim(attacker) == KNIFE_STABHIT)
+		power = 900.0;
+}
+
+public Leader::DeagleSpawn_P(ent)
+{
+	setWeaponData(ent, "m_iDefaultAmmo", 1);
+}
+
 public Leader::TakeDamage(id, inflictor, attacker, Float:damage, damageBits)
 {
 	if (!is_user_connected(attacker) || isZombie(attacker) == isZombie(id))
@@ -119,7 +139,7 @@ public Leader::TakeDamage(id, inflictor, attacker, Float:damage, damageBits)
 	{
 		if (get_user_weapon(attacker) == CSW_AK47)
 		{
-			SetHamParamFloat(4, damage * 3.0);
+			SetHamParamFloat(4, damage * 2.0);
 		}
 		else if (get_user_weapon(attacker) == CSW_DEAGLE)
 		{

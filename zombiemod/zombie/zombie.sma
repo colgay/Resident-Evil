@@ -154,6 +154,45 @@ Zombie::Humanize_Post(id)
 	resetPoisoning(id);
 }
 
+Zombie::PainShock(id, inflictor, attacker, damageBits, &Float:modifier)
+{
+	if (isZombie(id))
+	{
+		if (inflictor == attacker && (damageBits & DMG_BULLET))
+			applyPainShock(modifier, WEAPON_PAINSHOCK[get_user_weapon(attacker)]);
+
+		//new Float:dmgMultiplier = 1.0;
+		new hitGroup = get_ent_data(id, "CBaseMonster", "m_LastHitGroup");
+		
+		switch (hitGroup)
+		{
+			case HIT_HEAD:
+			{
+				applyPainShock(modifier, 0.65);
+				//dmgMultiplier = 4.0;
+			}
+			case HIT_CHEST:
+			{
+				applyPainShock(modifier, 0.9);
+			}
+			case HIT_STOMACH:
+			{
+				applyPainShock(modifier, 0.75);
+				//dmgMultiplier = 1.25
+			}
+			case HIT_LEFTLEG, HIT_RIGHTLEG:
+			{
+				applyPainShock(modifier, 0.5);
+				//dmgMultiplier = 0.75;
+			}
+			default:
+			{
+				applyPainShock(modifier, 0.9);
+			}
+		}
+	}
+}
+
 public Zombie::TakeDamage(id, inflictor, attacker, Float:damage, damageBits)
 {
 	if (!pev_valid(id))

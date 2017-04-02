@@ -112,3 +112,73 @@ enum
 };
 
 new const SOUND_WARNING[] = "resident_evil/warning.wav";
+
+new const Float:WEAPON_KNOCKBACK[] = 
+{
+	0.0, 
+	40.0, //p228 
+	0.0, 
+	200.0, //scout
+	0.0, //hegrenade
+	80.0, //xm1014
+	0.0, //c4
+	37.0, //mac10
+	65.0, //aug
+	0.0, //smoke
+	35.0, //elite
+	37.5, //fiveseven
+	40.0, //ump45
+	67.7, //sg550
+	44.0, //galil
+	45.0, //famas
+	40.0, //usp
+	35.0, //glock18
+	300.0, //awp
+	42.5, //mp5
+	60.0, //m249
+	90.0, //m3
+	57.5, //m4a1
+	36.0, //tmp
+	70.0, //g3sg1
+	0.0, //flash
+	100.0, //deagle
+	62.5, //sg552
+	60.0, //ak47
+	1.0, //knife
+	40.0 //p90
+};
+
+new const Float:WEAPON_PAINSHOCK[] = 
+{
+	0.0, 
+	0.85, //p228 
+	0.0, 
+	0.6, //scout
+	0.0, //hegrenade
+	0.65,//xm1014
+	0.0,//c4
+	0.9,//mac10
+	0.7,//aug
+	0.0,//smoke
+	0.9,//elite
+	0.88,//fiveseven
+	0.84,//ump45
+	0.675,//sg550
+	0.84,//galil
+	0.825,//famas
+	0.84,//usp
+	0.92,//glock18
+	0.5,//awp
+	0.85,//mp5
+	0.7,//m249
+	0.6,//m3
+	0.75,//m4a1
+	0.9,//tmp
+	0.65,//g3sg1
+	0.0,//flash
+	0.1,//deagle
+	0.7,//sg552
+	0.725,//ak47
+	0.8,//knife
+	0.875//p90
+}

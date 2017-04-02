@@ -134,6 +134,34 @@ Gmonster::KnockBack(id, &Float:power)
 	}
 }
 
+Gmonster::PainShock(id, attacker, &Float:modifier)
+{
+	if (isZombie(id) && g_gmonster[id])
+	{
+		switch (g_gmonster[id])
+		{
+			case GMONSTER_1ST:
+				applyPainShock(modifier, 0.9);
+			case GMONSTER_2ND:
+				applyPainShock(modifier, 1.15);
+			default:
+				applyPainShock(modifier, 1.35);
+		}
+	}
+	else if (isZombie(attacker) && getNemesis(attacker))
+	{
+		switch (g_gmonster[id])
+		{
+			case GMONSTER_1ST:
+				applyPainShock(modifier, 0.7);
+			case GMONSTER_2ND:
+				applyPainShock(modifier, 0.9);
+			default:
+				applyPainShock(modifier, 0.75);
+		}
+	}
+}
+
 Gmonster::AddPoison(id, attacker, Float:damage)
 {
 	if (g_gmonster[attacker])

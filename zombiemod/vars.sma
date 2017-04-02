@@ -9,5 +9,6 @@ new g_sprFire;
 new g_sprSteam;
 
 new g_modelGlass;
+new g_someText[64];
 
 new any:_hookResult;
