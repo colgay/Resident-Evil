@@ -24,7 +24,7 @@ HeavyZombie::Infect_Post(id)
 		cs_set_user_model(id, "zombie_heavy");
 
 		new name[32] = "Zombie - ";
-		getZombieTypeName(g_zombieFastId, name[9], charsmax(name) - 9);
+		getZombieTypeName(g_zombieHeavyId, name[9], charsmax(name) - 9);
 		setPlayerClass(id, name);
 	}
 }
@@ -55,7 +55,7 @@ HeavyZombie::KnockBack(id, &Float:power)
 HeavyZombie::PainShock(id, &Float:modifier)
 {
 	if (isZombie(id) && isHeavyZombie(id))
-		applyPainShock(modifier, 1.3);
+		applyPainShock(modifier, 0.5);
 }
 
 stock bool:isHeavyZombie(id)

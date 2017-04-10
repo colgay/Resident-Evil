@@ -12,6 +12,47 @@ new const NEMESIS_VIEW_MODEL[][] =
 
 new const NEMESIS_P_MODEL[] = "models/resident_evil/p_knife_nemesis.mdl";
 
+new const SOUND_NEMESIS_HURT[][] = 
+{
+	"resident_evil/zombie/nemesis/hurt1.wav",
+	"resident_evil/zombie/nemesis/hurt2.wav",
+	"resident_evil/zombie/nemesis/hurt3.wav"
+};
+
+new const SOUND_NEMESIS_DIE[][] = 
+{
+	"resident_evil/zombie/nemesis/die1.wav",
+	"resident_evil/zombie/nemesis/die2.wav"
+};
+
+new const SOUND_N1_HIT[] = 
+{
+	"resident_evil/zombie/nemesis/punch.wav"
+};
+
+new const SOUND_N2_HIT[][] = 
+{
+	"resident_evil/zombie/nemesis/hit1.wav",
+	"resident_evil/zombie/nemesis/hit2.wav"
+};
+
+new const SOUND_NEMESIS_HITWALL[] = 
+{
+	"resident_evil/zombie/nemesis/punch.wav"
+};
+
+new const SOUND_N1_MISS[][] =
+{
+	"resident_evil/zombie/nemesis/miss1.wav",
+	"resident_evil/zombie/nemesis/miss2.wav"
+};
+
+new const SOUND_N2_MISS[][] =
+{
+	"resident_evil/zombie/nemesis/miss3.wav",
+	"resident_evil/zombie/nemesis/miss4.wav"
+};
+
 const Float:NEMESIS_MUTATION_RATIO = 0.25;
 
 const Float:NEMESIS_ROCKET_RADIUS = 280.0;
@@ -29,9 +70,16 @@ Nemesis::Precache()
 	precachePlayerModel(NEMESIS_MODEL[0]);
 	precachePlayerModel(NEMESIS_MODEL[1]);
 
-	precache_model(NEMESIS_VIEW_MODEL[0]);
-	precache_model(NEMESIS_VIEW_MODEL[1]);
+	precacheModels(NEMESIS_VIEW_MODEL, sizeof NEMESIS_VIEW_MODEL);
 	precache_model(NEMESIS_P_MODEL);
+
+	precacheSounds(SOUND_NEMESIS_HURT, sizeof SOUND_NEMESIS_HURT);
+	precacheSounds(SOUND_NEMESIS_DIE, sizeof SOUND_NEMESIS_DIE);
+	precache_sound(SOUND_N1_HIT);
+	precacheSounds(SOUND_N2_HIT, sizeof SOUND_N2_HIT);
+	precache_sound(SOUND_NEMESIS_HITWALL);
+	precacheSounds(SOUND_N1_MISS, sizeof SOUND_N1_MISS);
+	precacheSounds(SOUND_N2_MISS, sizeof SOUND_N2_MISS);
 
 	precache_model("models/rpgrocket.mdl");
 	precache_sound("weapons/c4_explode1.wav");
@@ -136,6 +184,12 @@ Nemesis::HumanInfection(attacker)
 	HOOK_RETURN(PLUGIN_CONTINUE);
 }
 
+Nemesis::BoostPlayer(id, &Float:duration, &Float:speedRatio)
+{
+	if (g_nemesis[id])
+		duration = 6.0;
+}
+
 Nemesis::AddPoison(id, attacker, Float:damage)
 {
 	if (g_nemesis[attacker])
@@ -219,6 +273,64 @@ Nemesis::ResetMaxSpeed_Post(id)
 Nemesis::ResetZombie(id)
 {
 	g_nemesis[id] = false;
+}
+
+Nemesis::EmitSound(id, channel, const sample[], Float:volume, Float:attn, flags, pitch)
+{
+	if (is_user_connected(id) && isZombie(id) && g_nemesis[id])
+	{
+		// player/
+		if (equal(sample, "player", 6))
+		{
+			// player/headshot or player/bhit_flesh
+			if ((sample[7] == 'h' && sample[11] == 's') || (sample[7] == 'b' && sample[12] == 'f'))
+			{
+				if (HOOK_RESULT == FMRES_SUPERCEDE)
+				{
+					emit_sound(id, CHAN_VOICE, SOUND_NEMESIS_HURT[random(sizeof SOUND_NEMESIS_HURT)], volume, attn, flags, pitch);
+					HOOK_RETURN(FMRES_SUPERCEDE);
+				}
+			}
+			// player/die
+			else if (sample[7] == 'd' && sample[9] == 'e')
+			{
+				emit_sound(id, channel, SOUND_NEMESIS_DIE[random(sizeof SOUND_NEMESIS_DIE)], volume, attn, flags, pitch);
+				HOOK_RETURN(FMRES_SUPERCEDE);
+			}
+		}
+		// weapons/knife_
+		else if (equal(sample, "weapons", 7) && sample[8] == 'k' && sample[11] == 'f')
+		{
+			// weapons/knife_hit or weapons/knife_stab
+			if (sample[14] == 'h' || (sample[14] == 's' && sample[17] == 'b'))
+			{
+				// weapons/knife_hitwall
+				if (sample[17] == 'w')
+					emit_sound(id, channel, SOUND_NEMESIS_HITWALL, volume, attn, flags, pitch);
+				else
+				{
+					if (g_nemesis[id] == NEMESIS_1ST)
+						emit_sound(id, channel, SOUND_N1_HIT, volume, attn, flags, pitch);
+					else
+						emit_sound(id, channel, SOUND_N2_HIT[random(sizeof SOUND_N2_HIT)], volume, attn, flags, pitch);
+				}
+
+				HOOK_RETURN(FMRES_SUPERCEDE);
+			}
+			// weapons/knife_slash
+			else if (sample[14] == 's')
+			{
+				if (g_nemesis[id] == NEMESIS_1ST)
+					emit_sound(id, channel, SOUND_N1_MISS[random(sizeof SOUND_N1_MISS)], volume, attn, flags, pitch);
+				else
+					emit_sound(id, channel, SOUND_N2_MISS[random(sizeof SOUND_N2_MISS)], volume, attn, flags, pitch);
+
+				HOOK_RETURN(FMRES_SUPERCEDE);
+			}
+		}
+	}
+
+	HOOK_RETURN(FMRES_IGNORED);
 }
 
 public Nemesis::TakeDamage(id, inflictor, attacker, Float:damage, damageBits)
@@ -423,4 +535,9 @@ stock nemesisRocketExplode(rocket, toucher)
 stock getNemesis(id)
 {
 	return g_nemesis[id];
+}
+
+stock setNemesis(id, value)
+{
+	g_nemesis[id] = value;
 }

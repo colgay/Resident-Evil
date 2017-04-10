@@ -25,8 +25,9 @@ public ShowGameMenu(id)
 	menu_additem(menu, "What's new?");
 	menu_additem(menu, "Buy");
 	menu_additem(menu, "Choose zombie type");
-	
-	menu_setprop(menu, MPROP_NUMBER_COLOR, "\y");
+	menu_additem(menu, "Choose your weapons");
+
+	menu_setprop(menu, MPROP_NUMBER_COLOR, "\\y");
 	menu_display(id, menu);
 }
 
@@ -42,5 +43,9 @@ public HandleGameMenu(id, menu, item)
 		case 0: client_print(id, print_chat, "nothing new");
 		case 1: ShowBuyMenu(id);
 		case 2: ShowZombieTypeMenu(id);
+		case 3:
+		{
+			CmdChooseWeapons(id);
+		}
 	}
 }

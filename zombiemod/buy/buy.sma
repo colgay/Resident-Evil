@@ -127,11 +127,11 @@ Buy::BuyMenuAddText(id, item)
 	{
 		case BUYITEM_VIRUSBOMB:
 		{
-			formatex(g_someText, charsmax(g_someText), "\r(%d)", g_virusBombInStock);
+			formatex(g_someText, charsmax(g_someText), "\\r(%d)", g_virusBombInStock);
 		}
 		case BUYITEM_ANTIDOTE:
 		{
-			formatex(g_someText, charsmax(g_someText), "\r(%d/2)", g_antidoteRequires[id]);
+			formatex(g_someText, charsmax(g_someText), "\\r(%d/2)", g_antidoteRequires[id]);
 		}
 	}
 }
@@ -260,6 +260,14 @@ Buy::BuyItem(id, item)
 					client_print(id, print_center, "#Cstrike_TitlesTXT_Cannot_Carry_Anymore");
 					HOOK_RETURN(PLUGIN_HANDLED);
 				}
+			}
+		}
+		case BUYITEM_NVG:
+		{
+			if (hasNightVision(id))
+			{
+				client_print(id, print_center, "#Cstrike_TitlesTXT_Already_Have_One");
+				HOOK_RETURN(PLUGIN_HANDLED);
 			}
 		}
 	}
@@ -394,6 +402,11 @@ Buy::BuyItem_Post(id, item)
 				give_item(id, "weapon_smokegrenade");
 			}
 		}
+		case BUYITEM_NVG:
+		{
+			setNightVision(id, true);
+			nightVisionToggle(id, true, false, true);
+		}
 		case BUYITEM_FIRSTWPN .. BUYITEM_LASTWPN:
 		{
 			static const weaponClasses[][] = 
@@ -448,7 +461,7 @@ public ShowBuyMenu(id)
 
 	new team, rs;
 	
-	formatex(text, charsmax(text), "\yBuy Menu \r[%d RS]\R\yPrice", getResourcePoint(id));
+	formatex(text, charsmax(text), "\\yBuy Menu \\r[%d RS]\\R\\yPrice", getResourcePoint(id));
 	new menu = menu_create(text, "HandleBuyMenu");
 	
 	for (new i = 0; i < g_buyItemCount; i++)
@@ -472,19 +485,19 @@ public ShowBuyMenu(id)
 		
 		ArrayGetString(g_buyItemDesc, i, desc, charsmax(desc));
 		if (desc[0])
-			format(text, charsmax(text), "%s \d%s", text, desc);
+			format(text, charsmax(text), "%s \\d%s", text, desc);
 		
-		format(text, charsmax(text), "%s\R\y%d.SP", text, ArrayGetCell(g_buyItemCost, i));
+		format(text, charsmax(text), "%s\\R\\y%d.SP", text, ArrayGetCell(g_buyItemCost, i));
 		
 		rs = ArrayGetCell(g_buyItemRS, i);
 		if (rs)
-			format(text, charsmax(text), "%s\r%dRS", text, rs);
+			format(text, charsmax(text), "%s\\r%dRS", text, rs);
 		
 		num_to_str(i, info, charsmax(info));
 		menu_additem(menu, text, info);
 	}
 	
-	menu_setprop(menu, MPROP_NUMBER_COLOR, "\y");
+	menu_setprop(menu, MPROP_NUMBER_COLOR, "\\y");
 	menu_display(id, menu);
 }
 

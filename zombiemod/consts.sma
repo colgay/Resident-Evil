@@ -4,6 +4,8 @@
 #define Zombie::%0(%1) 			Zombie@%0(%1)
 #define Nemesis::%0(%1) 		Nemesis@%0(%1)
 #define Gmonster::%0(%1) 		Gmonster@%0(%1)
+#define Combiner::%0(%1) 		Combiner@%0(%1)
+#define Morpheus::%0(%1) 		Morpheus@%0(%1)
 #define FastZombie::%0(%1) 		FastZombie@%0(%1)
 #define LightZombie::%0(%1) 	LightZombie@%0(%1)
 #define HeavyZombie::%0(%1) 	HeavyZombie@%0(%1)
@@ -16,6 +18,7 @@
 #define HudInfo::%0(%1) 		HudInfo@%0(%1)
 #define Misc::%0(%1) 			Misc@%0(%1)
 #define Menu::%0(%1) 			Menu@%0(%1)
+#define NightVision::%0(%1) 	NightVision@%0(%1)
 
 #define HOOK_RESULT _hookResult
 #define HOOK_RETURN(%0) return hookReturn(%0)
@@ -29,6 +32,15 @@
 #define ZCLASS_BOSS -3
 
 #define PEV_NADE_TYPE pev_flTimeStepSound
+
+enum
+{
+	GAMEMODE_NORMAL_G = 0,
+	GAMEMODE_NORMAL_N,
+	GAMEMODE_NEMESIS,
+	GAMEMODE_GMONSTER,
+	GAMEMODE_NG
+};
 
 enum
 {
@@ -82,7 +94,12 @@ enum(+=50)
 	TASK_ROUNDSTART = 0,
 	TASK_RESPAWN,
 	TASK_FROZEN,
-	TASK_HUDINFO
+	TASK_HUDINFO,
+	TASK_BOOST,
+	TASK_ADDARMOR,
+	TASK_MUSIC,
+	TASK_LIGHT,
+	TASK_NODAMAGE
 };
 
 enum

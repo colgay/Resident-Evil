@@ -6,7 +6,7 @@ const Float:FIREBOMB_DURATION_MAX = 7.5;
 const Float:FIREBOMB_DAMAGE = 75.0;
 const Float:FIREBOMB_UPDATE_TIME = 0.5;
 
-new const SOUND_FIREBOMB_EXPLODE[] = "weapons/mortarhit.wav"
+new const SOUND_FIREBOMB_EXPLODE[] = "resident_evil/weapons/molotov_detonate.wav";
 
 new bool:g_isBurning[33];
 new g_burnAttacker[33];
@@ -110,7 +110,7 @@ FireBomb::PlayerPreThink(id)
 		new Float:health;
 		pev(id, pev_health, health);
 		
-		if (health < FIREBOMB_DAMAGE)
+		if (health - FIREBOMB_DAMAGE <= 0)
 		{
 			ExecuteHamB(Ham_Killed, id, attacker, 0);
 		}

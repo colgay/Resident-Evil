@@ -1,4 +1,4 @@
-const Float:MAX_PAINSHOCK_TIME = 4.0;
+const Float:MAX_PAINSHOCK_TIME = 3.5;
 
 new g_resourcePoint[33];
 new g_point[33];
@@ -9,13 +9,24 @@ new Float:g_damageDealt[33];
 new g_knifePoint[33];
 
 new Float:g_painShockLastTime[33];
+new Float:g_painShockTime[33];
 new Float:g_painShock[33];
 
 new OrpheuStruct:g_ppmove;
 
+new bool:g_spottedNemesis[33];
+new Float:g_lastSpottedNemesis[33];
+
+Player::Precache()
+{
+	precache_sound("resident_evil/hahajai.wav");
+	precache_generic("sound/resident_evil/yoyoman.mp3");
+}
+
 Player::Init()
 {
 	register_clcmd("set_painshock", "CmdPainShock");
+	register_clcmd("say /get", "CmdGet");
 	
 	register_event("ResetHUD", "Player@ResetHUD", "b");
 	register_message(get_user_msgid("HideWeapon"), "Player@HideWeapon");
@@ -26,6 +37,8 @@ Player::Init()
 
 	OrpheuRegisterHook(OrpheuGetFunction("PM_Move"), "OnPM_Move");
 	OrpheuRegisterHook(OrpheuGetFunction("PM_ReduceTimers"), "OnPM_ReduceTimers");
+	
+	set_task(1.0, "TaskCheckPlayer", 9527, _, _, "b");
 }
 
 Player::NewRound()
@@ -59,15 +72,27 @@ Player::DeathMsg(killer, victim)
 		
 		if (getNemesis(victim))
 		{
-			point = 15;
-			rs = 8;
-			client_print_color(0, killer, "^3%n ^1殺死 Nemesis ^3%n ^1獲得 15 SP", killer, victim)
+			point = 12;
+			rs = 17;
+			client_print_color(0, killer, "\3%n \1殺死 Nemesis \3%n \1獲得 %d SP", killer, victim, point)
 		}
 		else if (getGmonster(victim))
 		{
-			point = 17;
+			point = 15;
+			rs = 20;
+			client_print_color(0, killer, "\3%n \1殺死 G-Virus Monster \3%n \1獲得 %d SP", killer, victim, point)
+		}
+		else if (getCombiner(victim))
+		{
+			point = 8;
+			rs = 12;
+			client_print_color(0, killer, "\3%n \1殺死 Combiner \3%n \1獲得 %d SP", killer, victim, point)
+		}
+		else if (getMorpheus(victim))
+		{
+			point = 7;
 			rs = 10;
-			client_print_color(0, killer, "^3%n ^1殺死 G-Virus Monster ^3%n ^1獲得 17 SP", killer, victim)
+			client_print_color(0, killer, "\3%n \1殺死 Morpheus \3%n \1獲得 %d SP", killer, victim, point)
 		}
 		else
 		{
@@ -84,7 +109,7 @@ Player::DeathMsg(killer, victim)
 		if (getLeader(victim))
 		{
 			point = 15;
-			client_print_color(0, killer, "^3%n ^1殺死 Leader ^3%n ^1獲得 15 SP", killer, victim)
+			client_print_color(0, killer, "\3%n \1殺死 Leader \3%n \1獲得 %d SP", killer, victim, point)
 		}
 		else
 			point = 2;
@@ -108,7 +133,7 @@ Player::PlayerPreThink(id)
 		if (g_painShock[id] > 1.0)
 			g_painShock[id] = 1.0
 
-		g_painShockLastTime[id] = get_gametime();
+		g_painShockLastTime[id] = currentTime;
 	}
 }
 
@@ -124,7 +149,7 @@ public OnPM_ReduceTimers()
 	if (is_user_alive(id) && g_painShock[id] < 1.0)
 	{
 		new Float:maxspeed = Float:OrpheuGetStructMember(g_ppmove, "maxspeed");
-		OrpheuSetStructMember(g_ppmove, "maxspeed", maxspeed * g_painShock[id]);
+		OrpheuSetStructMember(g_ppmove, "maxspeed", maxspeed * floatmax(g_painShock[id], floatcos((get_gametime() - g_painShockTime[id]) * 360.0 * 2.5, degrees)));
 	}
 }
 
@@ -191,7 +216,8 @@ public Player::TakeDamage_Post(id, inflictor, attacker, Float:damage, damageBits
 			g_painShock[id] = modifier;
 
 		setPlayerDataF(id, "m_flVelocityModifier", 1.0);
-		client_print(0, print_chat, "painshock is %f", g_painShock[id]);
+		//client_print(0, print_chat, "painshock is %f", g_painShock[id]);
+		g_painShockTime[id] = get_gametime();
 	}
 }
 
@@ -210,13 +236,95 @@ public Player::ResetHUD(id)
 	message_end();
 }
 
+public TaskCheckPlayer()
+{
+	for (new id = 1; id <= g_maxClients; id++)
+	{
+		if (!is_user_alive(id))
+			continue;
+		
+		if (!isZombie(id))
+		{
+			checkPlayer(id);
+		}
+	}
+}
+
+public CmdGet(id)
+{
+	givePlayerReward(id, 50, 25);
+	
+	new num = random_num(1, 4);
+	
+	if (num == 1)
+		client_cmd(id, "spk \"the mode(e45) one(s20e70) mister(s25) has been destroyed\"");
+	else if (num == 2)
+		client_cmd(id, "spk \"the biological weapon has been destroyed\"");
+	else if (num == 3)
+		client_cmd(id, "spk \"the leak(e70) order(s30) is die\"");
+	else
+		client_cmd(id, "spk \"the captain is die\"");
+}
+
+stock checkPlayer(id)
+{
+	new bool:isSpotted = false;
+	
+	new Float:origin[3], Float:origin2[3];
+	pev(id, pev_origin, origin);
+	
+	for (new player = 1; player <= g_maxClients; player++)
+	{
+		if (!is_user_alive(player))
+			continue;
+
+		if (!getNemesis(player))
+			continue;
+		
+		pev(player, pev_origin, origin2);
+		
+		// Too far away
+		if (entity_range(id, player) > 1500)
+			continue;
+
+		// Not visible
+		if (!ExecuteHam(Ham_FVisible, id, player))
+			continue;
+
+		// Not in view cone
+		if (!ExecuteHam(Ham_FInViewCone, id, player))
+			continue;
+		
+		isSpotted = true;
+		break;
+	}
+	
+	if (isSpotted)
+	{
+		if (!g_spottedNemesis[id])
+		{
+			g_spottedNemesis[id] = true;
+			playSound(id, "resident_evil/hahajai.wav");
+			
+			client_print(id, print_chat, "nemesis spotted!");
+		}
+
+		g_lastSpottedNemesis[id] = get_gametime();
+	}
+	else if (get_gametime() >= g_lastSpottedNemesis[id] + 20.0)
+	{
+		g_spottedNemesis[id] = false;
+		//client_cmd(id, "mp3 stop");
+	}
+}
+
 stock givePlayerReward(id, point=0, rs=0)
 {
 	static message[64];
 	
 	if (point > 0)
 	{
-		formatex(message, charsmax(message), "+ %d SP^n", point);
+		formatex(message, charsmax(message), "+ %d SP\n", point);
 		addPlayerPoint(id, point);
 	}
 	

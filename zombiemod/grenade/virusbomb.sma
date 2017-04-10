@@ -8,11 +8,15 @@ new const Float:VIURSBOMB_ADD_HP_RATIO[] = {1.5, 2.5};
 new const Float:VIURSBOMB_MAX_ADD_HP[] = {1500.0, 2500.0};
 
 new const VIRUSBOMB_VIEW_MODEL[] = "models/resident_evil/v_virus_bomb.mdl";
+new const SOUND_VIRUSBOMB_EXPLODE[] = "resident_evil/weapons/infection.wav"
+
+new Float:g_lastVirusBombThrow[33];
 
 VirusBomb::Precache()
 {
 	precache_model(VIRUSBOMB_VIEW_MODEL);
 	precache_sound("player/bhit_helmet-1.wav");
+	precache_sound(SOUND_VIRUSBOMB_EXPLODE);
 }
 
 VirusBomb::Init()
@@ -70,6 +74,8 @@ VirusBomb::SetModel(ent, const model[])
 			
 			set_pev(ent, PEV_NADE_TYPE, NADE_VIRUSBOMB);
 		}
+
+		g_lastVirusBombThrow[owner] = get_gametime();
 	}
 }
 
@@ -109,6 +115,8 @@ public VirusBomb::Deploy(ent)
 stock virusBombExplode(ent)
 {
 	infectionBlastEffect(ent);
+	
+	emit_sound(ent, CHAN_WEAPON, SOUND_VIRUSBOMB_EXPLODE, 1.0, ATTN_NORM, 0, PITCH_NORM);
 	
 	new Float:origin[3];
 	pev(ent, pev_origin, origin);
@@ -176,6 +184,11 @@ stock virusBombExplode(ent)
 	}
 	
 	remove_entity(ent);
+}
+
+stock Float:getLastVirusBombThrowTime(id)
+{
+	return g_lastVirusBombThrow[id];
 }
 
 stock infectionBlastEffect(ent)

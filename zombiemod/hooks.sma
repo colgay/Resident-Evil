@@ -4,10 +4,14 @@ public OnPluginPrecache()
 {
 	g_fwEntSpawn = register_forward(FM_Spawn, "OnEntSpawn");
 	
+	Player::Precache();
+	Human::Precache();
 	Leader::Precache();
 	Zombie::Precache();
 	Nemesis::Precache();
 	Gmonster::Precache();
+	Combiner::Precache();
+	Morpheus::Precache();
 	FastZombie::Precache();
 	LightZombie::Precache();
 	HeavyZombie::Precache();
@@ -16,6 +20,7 @@ public OnPluginPrecache()
 	IceBomb::Precache();
 	VirusBomb::Precache();
 	Flare::Precache();
+	NightVision::Precache();
 	Buy::Precache();
 	Misc::Precache();
 }
@@ -26,11 +31,13 @@ public OnPluginInit()
 	register_event("DeathMsg", "OnEventDeathMsg", "a");
 
 	register_logevent("OnEventRoundStart", 2, "1=Round_Start");
+	register_logevent("OnEventRoundEnd", 2, "1=Round_End");
 	
 	register_forward(FM_PlayerPreThink, "OnPlayerPreThink");
 	register_forward(FM_CmdStart, "OnCmdStart");
 	register_forward(FM_CmdStart, "OnCmdStart_Post", 1);
 	register_forward(FM_SetModel, "OnSetModel");
+	register_forward(FM_EmitSound, "OnEmitSound");
 	
 	unregister_forward(FM_Spawn, g_fwEntSpawn);
 	
@@ -51,6 +58,8 @@ public OnPluginInit()
 	
 	RegisterHam(Ham_Think, "grenade", "OnGrenadeThink");
 	
+	OrpheuRegisterHook(OrpheuGetFunction("GiveDefaultItems", "CBasePlayer"), "OnGiveDefaultItems");
+
 	g_maxClients = get_maxplayers();
 	
 	Player::Init();
@@ -59,12 +68,15 @@ public OnPluginInit()
 	Zombie::Init();
 	Nemesis::Init();
 	Gmonster::Init();
+	Combiner::Init();
+	Morpheus::Init();
 	FastZombie::Init();
 	LightZombie::Init();
 	HeavyZombie::Init();
 	GameRules::Init();
 	Flare::Init();
 	VirusBomb::Init();
+	NightVision::Init();
 	Buy::Init();
 	HudInfo::Init();
 	Menu::Init();
@@ -91,11 +103,17 @@ public OnEventNewRound()
 	Nemesis::NewRound();
 	GameRules::NewRound();
 	Player::NewRound();
+	NightVision::NewRound();
 }
 
 public OnEventRoundStart()
 {
 	GameRules::RoundStart();
+}
+
+public OnEventRoundEnd()
+{
+	GameRules::RoundEnd();
 }
 
 public OnEventDeathMsg()
@@ -118,11 +136,13 @@ public OnClientDisconnect(id)
 	Zombie::Disconnect(id);
 	FireBomb::Disconnect(id);
 	IceBomb::Disconnect(id);
+	NightVision::Disconnect(id);
 	GameRules::Disconnect(id);
 }
 
 public OnClientPutInServer(id)
 {
+	NightVision::PutInServer(id);
 }
 
 public OnPlayerSpawn(id)
@@ -131,6 +151,7 @@ public OnPlayerSpawn(id)
 		return;
 	
 	GameRules::PlayerSpawn(id);
+	Human::PlayerSpawn(id);
 }
 
 public OnPlayerSpawn_Post(id)
@@ -138,7 +159,9 @@ public OnPlayerSpawn_Post(id)
 	if (!pev_valid(id))
 		return;
 	
+	Zombie::PlayerSpawn_Post(id);
 	GameRules::PlayerSpawn_Post(id);
+	NightVision::Spawn_Post(id);
 }
 
 public OnPlayerKilled(id, attacker, shouldGib)
@@ -154,6 +177,7 @@ public OnPlayerKilled_Post(id, attacker, shouldGib)
 	//Player::Killed_Post(id, attacker);
 	Leader::Killed_Post(id);
 	Zombie::Killed_Post(id);
+	NightVision::Killed_Post(id);
 }
 
 public OnPlayerJump(id)
@@ -171,9 +195,12 @@ public OnPlayerResetMaxSpeed_Post(id)
 	if (!pev_valid(id) || !is_user_alive(id))
 		return;
 	
-	Leader::ResetMaxSpeed(id);
+	Leader::ResetMaxSpeed_Post(id);
+	Zombie::ResetMaxSpeed_Post(id);
 	Nemesis::ResetMaxSpeed_Post(id);
 	Gmonster::ResetMaxSpeed_Post(id);
+	Combiner::ResetMaxSpeed_Post(id);
+	Morpheus::ResetMaxSpeed_Post(id);
 	FastZombie::ResetMaxSpeed_Post(id);
 	LightZombie::ResetMaxSpeed_Post(id);
 	HeavyZombie::ResetMaxSpeed_Post(id);
@@ -195,7 +222,7 @@ public OnKnifeDeploy_Post(ent)
 
 public OnWeaponTouch(weapon, toucher)
 {
-	if (!pev_valid(weapon))
+	if (!pev_valid(weapon) || !pev_valid(toucher))
 		return HAM_IGNORED;
 	
 	HOOK_RESULT = HAM_IGNORED;
@@ -237,7 +264,9 @@ public OnPlayerPreThink(id)
 	Zombie::PlayerPreThink(id);
 	Nemesis::PlayerPreThink(id);
 	Gmonster::PlayerPreThink(id);
+	Combiner::PlayerPreThink(id);
 	FireBomb::PlayerPreThink(id);
+	NightVision::PlayerPreThink(id);
 }
 
 public OnSetModel(ent, const model[])
@@ -251,22 +280,49 @@ public OnSetModel(ent, const model[])
 	VirusBomb::SetModel(ent, model);
 }
 
+public OnEmitSound(id, channel, const sample[], Float:volume, Float:attn, flags, pitch)
+{
+	HOOK_RESULT = FMRES_IGNORED;
+	
+	Human::EmitSound(id, channel, sample, volume, attn, flags, pitch);
+	Leader::EmitSound(id, channel, sample, volume, attn, flags, pitch);
+	Zombie::EmitSound(id, channel, sample, volume, attn, flags, pitch);
+	Nemesis::EmitSound(id, channel, sample, volume, attn, flags, pitch);
+	Gmonster::EmitSound(id, channel, sample, volume, attn, flags, pitch);
+
+	return HOOK_RESULT;
+}
+
 public OnPlayerInfect(id, attacker)
 {
-	Nemesis::Infect(id)
-	Gmonster::Infect(id)
+	Nemesis::Infect(id);
+	Gmonster::Infect(id);
+	Combiner::Infect(id);
+	Morpheus::Infect(id);
 }
 
 public OnPlayerInfect_Post(id, attacker)
 {
 	Leader::Infect_Post(id);
-	Zombie::Infect_Post(id);
+	Zombie::Infect_Post(id, attacker);
 	Nemesis::Infect_Post(id);
 	Gmonster::Infect_Post(id);
+	Combiner::Infect_Post(id);
+	Morpheus::Infect_Post(id);
 	FastZombie::Infect_Post(id);
 	LightZombie::Infect_Post(id);
 	HeavyZombie::Infect_Post(id);
+	NightVision::Infect_Post(id);
 	GameRules::Infect_Post(id);
+}
+
+public OnGiveDefaultItems(id)
+{
+	HOOK_RESULT = PLUGIN_CONTINUE;
+	
+	Human::GiveDefaultItems(id);
+	Zombie::GiveDefaultItems(id);
+	return HOOK_RESULT;
 }
 
 public OnPlayerHumanize(id)
@@ -281,12 +337,15 @@ public OnPlayerHumanize_Post(id)
 	GameRules::Humanize_Post(id);
 	FireBomb::Humanize_Post(id);
 	IceBomb::Humanize_Post(id);
+	NightVision::Humanize_Post(id);
 }
 
 public OnHumanArmorDamage(id, attacker, Float:damage, &Float:armorRatio, &Float:armorBonus)
 {
 	Nemesis::HumanArmorDamage(attacker, armorRatio, armorBonus);
 	Gmonster::HumanArmorDamage(attacker, armorRatio, armorBonus);
+	Combiner::HumanArmorDamage(attacker, armorRatio, armorBonus);
+	Morpheus::HumanArmorDamage(attacker, armorRatio, armorBonus);
 }
 
 public OnHumanInfection(id, attacker, Float:damage)
@@ -294,7 +353,23 @@ public OnHumanInfection(id, attacker, Float:damage)
 	HOOK_RESULT = PLUGIN_CONTINUE;
 	
 	Nemesis::HumanInfection(attacker);
+	Gmonster::HumanInfection(attacker);
+	Morpheus::HumanInfection(attacker);
 	return HOOK_RESULT;
+}
+
+public OnZombieBoost(id)
+{
+	HOOK_RESULT = PLUGIN_CONTINUE;
+	
+	return HOOK_RESULT;
+}
+
+public OnBoostPlayer(id, &Float:duration, &Float:speedRatio)
+{
+	Nemesis::BoostPlayer(id, duration, speedRatio);
+	Gmonster::BoostPlayer(id, duration, speedRatio);
+	Morpheus::BoostPlayer(id, duration, speedRatio);
 }
 
 public OnKnifeKnockBack(id, attacker, Float:damage, &Float:power)
@@ -305,8 +380,11 @@ public OnKnifeKnockBack(id, attacker, Float:damage, &Float:power)
 
 public OnKnockBack(id, attacker, Float:damage, &Float:power)
 {
+	Zombie::KnockBack(id, power);
 	Nemesis::KnockBack(id, power);
 	Gmonster::KnockBack(id, power);
+	Combiner::KnockBack(id, power);
+	Morpheus::KnockBack(id, power);
 	FastZombie::KnockBack(id, power);
 	HeavyZombie::KnockBack(id, power);
 	LightZombie::KnockBack(id, power);
@@ -319,6 +397,8 @@ public OnPainShock(id, inflictor, attacker, Float:damage, damageBits, &Float:mod
 	Zombie::PainShock(id, inflictor, attacker, damageBits, modifier);
 	Nemesis::PainShock(id, attacker, modifier);
 	Gmonster::PainShock(id, attacker, modifier);
+	Combiner::PainShock(id, attacker, modifier);
+	Morpheus::PainShock(id, attacker, modifier);
 	FastZombie::PainShock(id, modifier);
 	HeavyZombie::PainShock(id, modifier);
 	LightZombie::PainShock(id, modifier);
@@ -338,6 +418,8 @@ public OnSetZombieKnifeModel(id)
 	Zombie::SetKnifeModel(id);
 	Nemesis::SetKnifeModel(id);
 	Gmonster::SetKnifeModel(id);
+	Combiner::SetKnifeModel(id);
+	Morpheus::SetKnifeModel(id);
 	FastZombie::SetKnifeModel(id);
 	LightZombie::SetKnifeModel(id);
 	HeavyZombie::SetKnifeModel(id);
@@ -362,6 +444,8 @@ public OnResetZombie(id)
 {
 	Nemesis::ResetZombie(id);
 	Gmonster::ResetZombie(id);
+	Combiner::ResetZombie(id);
+	Morpheus::ResetZombie(id);
 	Buy::ResetZombie(id);
 }
 

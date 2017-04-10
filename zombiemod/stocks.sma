@@ -12,6 +12,30 @@ stock getRandomPlayer(players[32], &numPlayers, bool:remove=true)
 	return player;
 }
 
+stock precacheSounds(const array[][], size)
+{
+	for (new i = 0; i < size; i++)
+	{
+		precache_sound(array[i]);
+	}
+}
+
+stock precacheModels(const array[][], size)
+{
+	for (new i = 0; i < size; i++)
+	{
+		precache_model(array[i]);
+	}
+}
+
+stock precacheGenerics(const array[][], size)
+{
+	for (new i = 0; i < size; i++)
+	{
+		precache_generic(array[i]);
+	}
+}
+
 stock respawnPlayer(id)
 {
 	ExecuteHam(Ham_CS_RoundRespawn, id);
@@ -48,7 +72,7 @@ stock Float:getEntSpeed(ent)
 stock getWeaponBoxType(ent) 
 { 
 	new weapon;
-	for (new i = 1; i<= 5; i++)
+	for (new i = 1; i <= 5; i++)
 	{
 		weapon = get_ent_data_entity(ent, "CWeaponBox", "m_rgpPlayerItems", i);
 		
@@ -61,7 +85,7 @@ stock getWeaponBoxType(ent)
 
 stock playSound(id, const sound[])
 {
-	client_cmd(id, "spk ^"%s^"", sound);
+	client_cmd(id, "spk \"%s\"", sound);
 }
 
 stock precachePlayerModel(const model[])
@@ -147,6 +171,11 @@ stock bool:isJoiningTeam(id)
 	return (getPlayerData(id, "m_iMenu") == 3);
 }
 
+stock stopSound(id)
+{
+	client_cmd(id, "stopsound");
+}
+
 stock setPlayerTeam(id, team, bool:scoreBoard=true, bool:checkTeam=true)
 {
 	if (checkTeam && getPlayerData(id, "m_iTeam") == team)
@@ -170,6 +199,146 @@ stock setPlayerTeam(id, team, bool:scoreBoard=true, bool:checkTeam=true)
 		}
 		emessage_end();
 	}
+}
+
+stock countCombiners()
+{
+	new count = 0;
+	
+	for (new i = 1; i <= g_maxClients; i++)
+	{
+		if (!is_user_alive(i))
+			continue;
+		
+		if (isZombie(i) && getCombiner(i))
+			count++;
+	}
+	
+	return count;
+}
+
+stock countMorpheus()
+{
+	new count = 0;
+	
+	for (new i = 1; i <= g_maxClients; i++)
+	{
+		if (!is_user_alive(i))
+			continue;
+		
+		if (isZombie(i) && getMorpheus(i))
+			count++;
+	}
+	
+	return count;
+}
+
+stock countNemesis()
+{
+	new count = 0;
+	
+	for (new i = 1; i <= g_maxClients; i++)
+	{
+		if (!is_user_alive(i))
+			continue;
+		
+		if (isZombie(i) && getNemesis(i))
+			count++;
+	}
+	
+	return count;
+}
+
+stock countGmonsters()
+{
+	new count = 0;
+	
+	for (new i = 1; i <= g_maxClients; i++)
+	{
+		if (!is_user_alive(i))
+			continue;
+		
+		if (isZombie(i) && getGmonster(i))
+			count++;
+	}
+	
+	return count;
+}
+
+stock countHumans()
+{
+	new count = 0;
+	
+	for (new i = 1; i <= g_maxClients; i++)
+	{
+		if (!is_user_alive(i))
+			continue;
+		
+		if (!isZombie(i))
+			count++;
+	}
+	
+	return count;
+}
+
+stock countLeaders()
+{
+	new count = 0;
+	
+	for (new i = 1; i <= g_maxClients; i++)
+	{
+		if (!is_user_alive(i))
+			continue;
+		
+		if (!isZombie(i) && getLeader(i))
+			count++;
+	}
+	
+	return count;
+}
+
+stock sendLightStyle(id, style=0, const lights[], bool:external=false)
+{
+	if (external)
+	{
+		emessage_begin(id ? MSG_ONE_UNRELIABLE : MSG_BROADCAST, SVC_LIGHTSTYLE, _, id);
+		ewrite_byte(style);
+		ewrite_string(lights);
+		emessage_end();
+	}
+	else
+	{
+		message_begin(id ? MSG_ONE_UNRELIABLE : MSG_BROADCAST, SVC_LIGHTSTYLE, _, id);
+		write_byte(style);
+		write_string(lights);
+		message_end();
+	}
+}
+
+stock playMusic(id, const music[], bool:loop=false)
+{
+	client_cmd(id, "mp3 %s \"%s\"", loop ? "loop" : "play", music);
+}
+
+stock stopMusic(id)
+{
+	client_cmd(id, "mp3 stop");
+}
+
+stock countZombies()
+{
+	new count = 0;
+	
+	for (new i = 1; i <= g_maxClients; i++)
+	{
+		if (!is_user_alive(i))
+			continue;
+		
+		if (isZombie(i))
+			count++;
+	}
+	
+	return count;
 }
 
 stock countRespawnables()

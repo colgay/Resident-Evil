@@ -1,3 +1,8 @@
+/*
+[TODO]
+- 
+ */
+
 #include <amxmodx>
 #include <amxmisc>
 #include <fun>
@@ -13,6 +18,8 @@
 #include <gamedata_stocks>
 #include <nvault>
 
+#pragma ctrlchar '\'
+
 #define VERSION "0.1"
 
 #include "zombiemod/consts.sma"
@@ -27,6 +34,9 @@
 #include "zombiemod/zombie/zombie.sma"
 #include "zombiemod/zombie/nemesis.sma"
 #include "zombiemod/zombie/gmonster.sma"
+#include "zombiemod/zombie/combiner.sma"
+#include "zombiemod/zombie/morpheus.sma"
+
 #include "zombiemod/zombie/zombie_fast.sma"
 #include "zombiemod/zombie/zombie_light.sma"
 #include "zombiemod/zombie/zombie_heavy.sma"
@@ -37,6 +47,8 @@
 #include "zombiemod/grenade/icebomb.sma"
 #include "zombiemod/grenade/flare.sma"
 #include "zombiemod/grenade/virusbomb.sma"
+
+#include "zombiemod/nightvision.sma"
 
 #include "zombiemod/buy/buy.sma"
 

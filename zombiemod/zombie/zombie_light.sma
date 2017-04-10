@@ -24,7 +24,7 @@ LightZombie::Infect_Post(id)
 		cs_set_user_model(id, "zombie_light");
 
 		new name[32] = "Zombie - ";
-		getZombieTypeName(g_zombieFastId, name[9], charsmax(name) - 9);
+		getZombieTypeName(g_zombieLightId, name[9], charsmax(name) - 9);
 		setPlayerClass(id, name);
 	}
 }
@@ -54,7 +54,7 @@ LightZombie::KnockBack(id, &Float:power)
 LightZombie::PainShock(id, &Float:modifier)
 {
 	if (isZombie(id) && isLightZombie(id))
-		applyPainShock(modifier, 0.7);
+		applyPainShock(modifier, 0.6);
 }
 
 stock bool:isLightZombie(id)

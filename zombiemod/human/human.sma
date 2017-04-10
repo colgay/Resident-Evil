@@ -1,3 +1,22 @@
+new const SOUND_HUMAN_HURT[][] = 
+{
+	"resident_evil/human/male_hurt1.wav",
+	"resident_evil/human/male_hurt2.wav",
+	"resident_evil/human/male_hurt3.wav"
+};
+
+new const SOUND_HUMAN_DIE[][] = 
+{
+	"resident_evil/human/male_die1.wav",
+	"resident_evil/human/male_die2.wav",
+	"resident_evil/human/male_die3.wav"
+};
+
+new const SOUND_HUMAN_HEARTBEAT[] = 
+{
+	"resident_evil/human/heartbeat3.wav"
+};
+
 new const PRIMARY_NAMES[][] = {"MAC-10", "TMP", "Scout"};
 new const PRIMARY_CLASSES[][] = {"mac10", "tmp", "scout"};
 
@@ -9,9 +28,19 @@ const Float:ARMOR_BONUS = 1.0;
 
 new Float:g_attackDirection[3];
 new Float:g_oldVelocity[3];
+new bool:g_hasChosenWeapon[33];
+
+Human::Precache()
+{
+	precacheSounds(SOUND_HUMAN_HURT, sizeof SOUND_HUMAN_HURT);
+	precacheSounds(SOUND_HUMAN_DIE, sizeof SOUND_HUMAN_DIE);
+	precache_sound(SOUND_HUMAN_HEARTBEAT);
+}
 
 Human::Init()
 {
+	register_clcmd("say /guns", "CmdChooseWeapons");
+	
 	RegisterHam(Ham_TraceAttack, "player", "Human@TraceAttack");
 	RegisterHam(Ham_TraceAttack, "player", "Human@TraceAttack_Post", 1);
 	RegisterHam(Ham_TakeDamage, "player", "Human@TakeDamage");
@@ -32,6 +61,8 @@ Human::Humanize_Post(id)
 	setResourcePoint(id, 40);
 	
 	setPlayerClass(id, "Survivor");
+	
+	g_hasChosenWeapon[id] = false;
 	
 	ShowPrimaryMenu(id);
 }
@@ -72,14 +103,79 @@ Human::PainShock(id, Float:damage, &Float:modifier)
 		
 		// If player has armor
 		if (damage == 0.0)
-			applyPainShock(modifier, 1.3);
+			applyPainShock(modifier, 1.25);
 	}
 }
 
 Human::KnifeKnockBack(id, attacker, &Float:power)
 {
 	if (!isZombie(attacker) && getWeaponAnim(attacker) == KNIFE_STABHIT && getZombieType(id) >= 0)
-		power = 700.0;
+		power = 750.0;
+}
+
+Human::EmitSound(id, channel, const sample[], Float:volume, Float:attn, flags, pitch)
+{
+	if (is_user_connected(id) && !isZombie(id))
+	{
+		// player/
+		if (equal(sample, "player", 6))
+		{
+			// player/headshot or player/bhit_flesh
+			if ((sample[7] == 'h' && sample[11] == 's') || (sample[7] == 'b' && sample[12] == 'f'))
+			{
+				if (random_num(1, 4) == 1)
+				{
+					emit_sound(id, CHAN_VOICE, SOUND_HUMAN_HURT[random(sizeof SOUND_HUMAN_HURT)], volume, attn, flags, pitch);
+					HOOK_RETURN(FMRES_SUPERCEDE);
+				}
+			}
+			// player/die
+			else if (sample[7] == 'd' && sample[9] == 'e')
+			{
+				emit_sound(id, channel, SOUND_HUMAN_DIE[random(sizeof SOUND_HUMAN_DIE)], volume, attn, flags, pitch);
+				HOOK_RETURN(FMRES_SUPERCEDE);
+			}
+		}
+	}
+	
+	HOOK_RETURN(FMRES_IGNORED);
+}
+
+Human::PlayerSpawn(id)
+{
+	if (1 <= getPlayerData(id, "m_iTeam") <= 2)
+	{
+		if (user_has_weapon(id, CSW_AK47) || user_has_weapon(id, CSW_DEAGLE))
+			setPlayerData(id, "m_bNotKilled", false);
+	}
+}
+
+Human::GiveDefaultItems(id)
+{
+	if (!isZombie(id))
+	{
+		strip_user_weapons(id);
+		give_item(id, "weapon_knife");
+		
+		HOOK_RETURN(OrpheuSupercede);
+	}
+
+	HOOK_RETURN(OrpheuIgnored);
+}
+
+public CmdChooseWeapons(id)
+{
+	if (!is_user_alive(id) || isZombie(id) || getLeader(id))
+		return PLUGIN_HANDLED;
+	
+	if (g_hasChosenWeapon[id])
+	{
+		client_print(id, print_chat, "You have already chosen your weapons.");
+		return PLUGIN_HANDLED;
+	}
+	
+	ShowPrimaryMenu(id);
+	return PLUGIN_HANDLED;
 }
 
 public Human::TraceAttack(id, attacker, Float:damage, Float:direction[3], trace, damageBits)
@@ -199,6 +295,9 @@ public Human::TakeDamage_Post(id, inflictor, attacker, Float:damage, damageBits)
 
 public ShowPrimaryMenu(id)
 {
+	if (!is_user_alive(id) || getLeader(id))
+		return;
+	
 	new menu = menu_create("Choose a Weapon", "HandlePrimaryMenu");
 	
 	for (new i = 0; i < sizeof PRIMARY_NAMES; i++)
@@ -206,8 +305,8 @@ public ShowPrimaryMenu(id)
 		menu_additem(menu, PRIMARY_NAMES[i]);
 	}
 	
-	menu_setprop(menu, MPROP_NUMBER_COLOR, "\y");
-	menu_setprop(menu, MPROP_EXITNAME, "#bye#^n");
+	menu_setprop(menu, MPROP_NUMBER_COLOR, "\\y");
+	menu_setprop(menu, MPROP_EXITNAME, "#bye#\n");
 	menu_display(id, menu, _, 10);
 }
 
@@ -218,7 +317,7 @@ public HandlePrimaryMenu(id, menu, item)
 	if (item == MENU_EXIT)
 		return;
 	
-	if (!is_user_alive(id) || isZombie(id))
+	if (!is_user_alive(id) || isZombie(id) || getLeader(id))
 		return;
 	
 	dropWeapons(id, 1);
@@ -230,11 +329,16 @@ public HandlePrimaryMenu(id, menu, item)
 	new weapon = get_weaponid(name);
 	giveWeaponFullAmmo(id, weapon);
 	
+	g_hasChosenWeapon[id] = true;
+
 	ShowPistolMenu(id);
 }
 
 public ShowPistolMenu(id)
 {
+	if (!is_user_alive(id) || getLeader(id))
+		return;
+	
 	new menu = menu_create("Choose a Pistol", "HandlePistolMenu");
 	
 	for (new i = 0; i < sizeof PISTOL_NAMES; i++)
@@ -242,8 +346,8 @@ public ShowPistolMenu(id)
 		menu_additem(menu, PISTOL_NAMES[i]);
 	}
 	
-	menu_setprop(menu, MPROP_NUMBER_COLOR, "\y");
-	menu_setprop(menu, MPROP_EXITNAME, "#bye#^n");
+	menu_setprop(menu, MPROP_NUMBER_COLOR, "\\y");
+	menu_setprop(menu, MPROP_EXITNAME, "#bye#\n");
 	menu_display(id, menu, _, 10);
 }
 
@@ -254,7 +358,7 @@ public HandlePistolMenu(id, menu, item)
 	if (item == MENU_EXIT)
 		return;
 	
-	if (!is_user_alive(id) || isZombie(id))
+	if (!is_user_alive(id) || isZombie(id) || getLeader(id))
 		return;
 	
 	dropWeapons(id, 2);
@@ -277,20 +381,4 @@ stock humanizePlayer(id)
 	OnPlayerHumanize(id);
 	setZombie(id, false);
 	OnPlayerHumanize_Post(id);
-}
-
-stock countHumans()
-{
-	new count = 0;
-	
-	for (new i = 1; i <= g_maxClients; i++)
-	{
-		if (!is_user_alive(i))
-			continue;
-		
-		if (!isZombie(i))
-			count++;
-	}
-	
-	return count;
 }

@@ -6,12 +6,19 @@ const Float:ICEBOMB_RADIUS = 240.0;
 new const Float:ICEBOMB_DURATION_MIN[] = {2.5, 4.0};
 new const Float:ICEBOMB_DURATION_MAX[] = {4.0, 6.0};
 
+new const SOUND_ICEBOMB_EXPLODE[] = "resident_evil/weapons/frostnova.wav";
+new const SOUND_ICEBOMB_FREEZE[] = "resident_evil/weapons/impalehit.wav";
+new const SOUND_ICEBOMB_UNFREEZE[] = "resident_evil/weapons/impalelaunch1.wav";
+
 new bool:g_isFrozen[33];
 new Float:g_frozenStart[33];
 new Float:g_frozenDuration[33];
 
 IceBomb::Precache()
 {
+	precache_sound(SOUND_ICEBOMB_EXPLODE);
+	precache_sound(SOUND_ICEBOMB_FREEZE);
+	precache_sound(SOUND_ICEBOMB_UNFREEZE);
 }
 
 IceBomb::SetModel(ent, const model[])
@@ -140,7 +147,7 @@ stock iceBombExplode(ent)
 {
 	iceBlastEffects(ent);
 	
-	//emit_sound(ent, CHAN_WEAPON, SOUND_ICEBOMB, 1.0, ATTN_NORM, 0, PITCH_NORM);
+	emit_sound(ent, CHAN_WEAPON, SOUND_ICEBOMB_EXPLODE, 1.0, ATTN_NORM, 0, PITCH_NORM);
 	
 	new Float:origin[3];
 	pev(ent, pev_origin, origin);
@@ -157,7 +164,12 @@ stock iceBombExplode(ent)
 		radiusRatio = 1.0 - (entity_range(ent, player) / ICEBOMB_RADIUS);
 		
 		if (pev(ent, PEV_NADE_TYPE) == NADE_ICEBOMB)
+		{
 			duration = floatmax(ICEBOMB_DURATION_MAX[0] * radiusRatio, ICEBOMB_DURATION_MIN[0]);
+			
+			if (getNemesis(player) || getGmonster(player) > GMONSTER_1ST)
+				duration = 0.0;
+		}
 		else
 			duration = floatmax(ICEBOMB_DURATION_MAX[1] * radiusRatio, ICEBOMB_DURATION_MIN[1]);
 		
@@ -243,6 +255,8 @@ stock frozenPlayer(id, Float:duration)
 	g_frozenDuration[id] = duration;
 	
 	resetPlayerMaxSpeed(id);
+
+	emit_sound(id, CHAN_BODY, SOUND_ICEBOMB_FREEZE, 1.0, ATTN_NORM, 0, PITCH_NORM);
 	
 	sendScreenFade(id, 1.0, duration, FFADE_IN, {0, 100, 200}, 120, true);
 	sendDamage(id, 0, 0, DMG_DROWN, Float:{0.0, 0.0, 0.0});
@@ -293,5 +307,7 @@ stock removeFrozen(id, bool:effect=false)
 		write_byte(25); // life
 		write_byte(0x01); // flags
 		message_end();
+		
+		emit_sound(id, CHAN_BODY, SOUND_ICEBOMB_UNFREEZE, 1.0, ATTN_NORM, 0, PITCH_NORM);
 	}
 }
